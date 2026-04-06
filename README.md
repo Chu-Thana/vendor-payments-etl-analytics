@@ -39,18 +39,19 @@ Key objectives:
 
 ---
 
-# 📂 Project Structure
+## 📁 Project Structure
 
 ```text
 superstore-etl-analytics/
+├─ assets/                        # Dashboard images (README preview)
+├─ data/                          # Raw input data (CSV)
+├─ output/                        # Cleaned data, reports, database
+├─ SQL/                           # Analytical queries / views
+├─ clean_superstore.py            # Data cleaning logic
+├─ superstore_analytics.pbix      # Power BI dashboard
+├─ Superstore.csv                 # Raw dataset
+├─ main.py                        # Pipeline entrypoint (optional)
 
-├── data/                        # Raw input data (CSV)
-├── output/                      # Cleaned data, reports, database
-├── SQL/                         # Analytical queries / views
-├── clean_superstore.py          # Data cleaning logic
-├── superstore_analytics.pbix    # Power BI dashboard
-├── Superstore.csv               # Raw dataset
-└── main.py                      # Pipeline entrypoint (optional)
 ```
 
 ---
@@ -74,6 +75,8 @@ Model --> Views
 Views --> BI
 ```
 
+---
+
 ## 📊 Analytics Layer
 
 This project includes a Power BI dashboard built on top of the processed data.
@@ -86,6 +89,8 @@ Key features:
 
 The dashboard connects to the transformed data stored in SQLite and provides business insights for decision-making.
 This layer demonstrates how raw data is transformed into actionable insights through analytical modeling and visualization.
+
+```
 
 ---
 
@@ -114,10 +119,18 @@ Builds a **star schema**:
 - SQL-based analytical views
 - Pre-aggregated datasets for BI queries
 
-### 📷 Dashboard Preview
+## 📷 Dashboard Preview
 
-![Dashboard](assets/dashboard_preview.png)
-📁 File: superstore_analytics.pbix
+### 📊 Overview Dashboard
+![Overview](assets/dashboard_overview.png)
+
+### 📉 Discount vs Profit Analysis
+![Discount](assets/dashboard_discount.png)
+
+> Example insights: High discount does not guarantee high profit, and some segments rely heavily on discounting with lower margins.
+
+```
+
 ---
 
 # 📊 Output
