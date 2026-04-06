@@ -1,0 +1,21 @@
+# IDE settings
+.idea/
+.vscode/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Local environment
+.env
+
+# Logs
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Data files (optional - uncomment if needed)
+# data/*
+# !data/.gitkeep
