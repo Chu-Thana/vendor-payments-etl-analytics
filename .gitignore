@@ -19,3 +19,8 @@ Thumbs.db
 # Data files (optional - uncomment if needed)
 # data/*
 # !data/.gitkeep
+
+output/*
+*.db
+*.csv
+*.json
