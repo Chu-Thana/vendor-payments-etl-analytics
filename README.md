@@ -35,6 +35,7 @@ Key objectives:
 - Structured Logging
 - CSV Data Sources
 - Git
+- Power BI (Dashboard & Visualization)
 
 ---
 
@@ -42,13 +43,14 @@ Key objectives:
 
 ```text
 superstore-etl-analytics/
-│
-├── data/                  # Raw input data (CSV)
-├── etl/                   # ETL logic (extract, transform, load)
-├── models/                # Data modeling (fact & dimension tables)
-├── sql/                   # Analytical queries / views
-├── logs/                  # ETL execution logs
-└── main.py                # Pipeline entrypoint
+
+├── data/                        # Raw input data (CSV)
+├── output/                      # Cleaned data, reports, database
+├── SQL/                         # Analytical queries / views
+├── clean_superstore.py          # Data cleaning logic
+├── superstore_analytics.pbix    # Power BI dashboard
+├── Superstore.csv               # Raw dataset
+└── main.py                      # Pipeline entrypoint (optional)
 ```
 
 ---
@@ -71,6 +73,19 @@ Transform --> Model
 Model --> Views
 Views --> BI
 ```
+
+## 📊 Analytics Layer
+
+This project includes a Power BI dashboard built on top of the processed data.
+
+Key features:
+- Sales performance analysis by region, category, and segment
+- Time-based trends (monthly / yearly sales)
+- Top-performing products and regions
+- Interactive filtering for deeper analysis
+
+The dashboard connects to the transformed data stored in SQLite and provides business insights for decision-making.
+This layer demonstrates how raw data is transformed into actionable insights through analytical modeling and visualization.
 
 ---
 
@@ -99,6 +114,10 @@ Builds a **star schema**:
 - SQL-based analytical views
 - Pre-aggregated datasets for BI queries
 
+### 📷 Dashboard Preview
+
+![Dashboard](assets/dashboard_preview.png)
+📁 File: superstore_analytics.pbix
 ---
 
 # 📊 Output
