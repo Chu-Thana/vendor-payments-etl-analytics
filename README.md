@@ -7,35 +7,30 @@
 ![Modeling](https://img.shields.io/badge/Model-Star%20Schema-green)
 ![Logging](https://img.shields.io/badge/Logs-Structured-brightgreen)
 
-A production-style batch data pipeline that transforms raw transactional data into analytics-ready datasets using validation, structured transformation, and dimensional modeling.
+A **production-style batch ETL pipeline** that transforms raw transactional data into analytics-ready datasets using validation, structured transformations, and dimensional modeling.
 
 ---
 
-# 🧠 Design Goals
+## 🧠 Design Goals
 
-This project simulates a **production-style batch ETL pipeline** commonly used in modern analytics platforms.
+This project simulates a real-world **data engineering workflow**, focusing on:
 
-Key objectives:
-
-* Validate incoming raw data before processing
-* Detect anomalies and logical inconsistencies
-* Apply structured transformation logic
-* Build a star schema for analytical workloads
-* Ensure data quality and reproducibility
-* Produce analytics-ready datasets for BI systems
+* Data validation and anomaly detection
+* Structured transformation and normalization
+* Dimensional modeling (Star Schema)
+* Data quality and reproducibility
+* Analytics-ready data for BI systems
 
 ---
 
-# 🚀 Tech Stack
+## 🚀 Tech Stack
 
 * Python 3.12
 * Pandas
 * SQLite
 * SQL (Analytical Queries)
 * Structured Logging
-* CSV Data Sources
-* Git
-* Power BI (Dashboard & Visualization)
+* Power BI
 
 ---
 
@@ -43,107 +38,94 @@ Key objectives:
 
 ```text
 superstore-etl-analytics/
-├─ assets/                        # Dashboard images (README preview)
-├─ data/                          # Raw input data (CSV)
-├─ output/                        # Cleaned data, reports, database
-├─ SQL/                           # Analytical queries / views
-├─ clean_superstore.py            # Data cleaning logic
-├─ superstore_analytics.pbix      # Power BI dashboard
-├─ Superstore.csv                 # Raw dataset
-├─ main.py                        # Pipeline entrypoint (optional)
+├─ assets/                  # Dashboard images
+├─ SQL/                     # Analytical queries / views
+├─ clean_superstore.py      # Data cleaning logic
+├─ Superstore.csv           # Raw dataset
+├─ superstore_analytics.pbix
+├─ README.md
 ```
+
+> Note: `output/` directory is generated at runtime and excluded from version control.
 
 ---
 
-# 🏗 Architecture Overview
+## 🏗 Architecture Overview
 
 ```mermaid
 flowchart LR
 
 Raw["Raw CSV Data"]
 Validate["Data Validation"]
-Transform["Transformation Layer (Pandas)"]
-Model["Data Modeling (Fact + Dimensions)"]
+Transform["Transformation (Pandas)"]
+Model["Star Schema Modeling"]
 Views["SQL Analytical Views"]
-BI["BI / Dashboard"]
+BI["Dashboard"]
 
-Raw --> Validate
-Validate --> Transform
-Transform --> Model
-Model --> Views
-Views --> BI
+Raw --> Validate --> Transform --> Model --> Views --> BI
 ```
 
 ---
 
-## 📊 Analytics Layer
+## 🔄 Data Flow
 
-This project includes a Power BI dashboard built on top of the processed data.
+### 1️⃣ Ingestion
 
-Key features:
+* Load raw CSV dataset
+* Perform schema inspection
 
-* Sales performance analysis by region, category, and segment
-* Time-based trends (monthly / yearly sales)
-* Top-performing products and regions
-* Interactive filtering for deeper analysis
-
-The dashboard connects to the transformed data stored in SQLite and provides business insights for decision-making.
-This layer demonstrates how raw data is transformed into actionable insights through analytical modeling and visualization.
-
-## 🔄 Data Flow (End-to-End Pipeline)
-
-### 1️⃣ Raw Data Ingestion
-
-* Load raw transactional dataset (CSV)
-* Initial schema inspection
-
-### 2️⃣ Data Validation
+### 2️⃣ Validation
 
 * Null checks
-* Data type enforcement
-* Logical consistency validation
+* Type validation
+* Logical constraints
 
-### 3️⃣ Transformation Layer
+### 3️⃣ Transformation
 
-* Data cleaning and normalization
+* Data cleaning & normalization
 * Feature engineering
-* Derived metrics calculation
+* Derived metrics
 
-### 4️⃣ Data Modeling
+### 4️⃣ Modeling
 
-* Builds a **star schema**
 * Fact table: sales transactions
 * Dimension tables: customer, product, region
 
-### 5️⃣ Analytics Layer
+### 5️⃣ Analytics
 
-* SQL-based analytical views
-* Pre-aggregated datasets for BI queries
+* SQL-based views
+* Pre-aggregated datasets for BI
 
-## 📷 Dashboard Preview
+---
 
-### 📊 Overview Dashboard
+## 📊 Dashboard Preview
+
+### Overview Dashboard
 
 ![Overview](assets/dashboard_overview.png)
 
-### 📉 Discount vs Profit Analysis
+### Discount vs Profit Analysis
 
 ![Discount](assets/dashboard_discount.png)
 
-> Example insights: High discount does not guarantee high profit, and some segments rely heavily on discounting with lower margins.
+> Insight: High discount does not always lead to higher profit.
 
 ---
 
 ## 📊 Output
 
-* Cleaned datasets
-* Fact and dimension tables
-* SQL views for reporting
+Generated after pipeline execution:
 
-## 🚀 Running the Pipeline
+* Cleaned datasets
+* Fact & dimension tables
+* Analytical SQL views
+
+---
+
+## 🚀 Run Pipeline
 
 ```bash
-python main.py
+python clean_superstore.py
 ```
 
 ---
@@ -151,44 +133,44 @@ python main.py
 ## 📊 Observability
 
 * Structured logging
-* ETL execution logs
+* Execution tracking
 
 ---
 
-# 📐 Key Design Decisions
+## 📐 Key Design Decisions
 
-* Layered architecture (Validation → Transform → Model)
+* Layered pipeline architecture
 * Star schema for analytical performance
 * Pandas for transformation
 * SQL for analytics layer
 
 ---
 
-# 🎯 Batch Processing Characteristics
+## 🎯 Batch Processing Characteristics
 
-* Deterministic processing
-* Data quality first
-* Layered pipeline design
+* Deterministic execution
+* Data quality-first design
+* Reproducible pipeline
 
 ---
 
-# 🔮 Future Improvements
+## 🔮 Future Improvements
 
 * Airflow orchestration
-* PostgreSQL / Data Warehouse
+* Cloud data warehouse (S3 + Redshift / BigQuery)
 * Data quality monitoring
-* FastAPI integration
+* API serving layer integration
 
 ---
 
-# 🏁 Portfolio Context
+## 🏁 Portfolio Context
 
 ```text
 Batch ETL (this project)
       ↓
 Analytics API
       ↓
-Streaming Pipeline
+Streaming Pipeline (Kafka)
       ↓
 Orchestration (Airflow)
 ```
