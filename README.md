@@ -73,6 +73,7 @@ Validate --> Transform
 Transform --> Model
 Model --> Views
 Views --> BI
+
 ```
 
 ---
@@ -92,9 +93,9 @@ This layer demonstrates how raw data is transformed into actionable insights thr
 
 ```
 
----
+```
 
-# 🔄 Data Flow
+## 🔄 Data Flow (End-to-End Pipeline)
 
 ### 1️⃣ Raw Data Ingestion
 - Load raw transactional dataset (CSV)
@@ -111,7 +112,7 @@ This layer demonstrates how raw data is transformed into actionable insights thr
 - Derived metrics calculation
 
 ### 4️⃣ Data Modeling
-Builds a **star schema**:
+- Builds a **star schema**
 - Fact table: sales transactions
 - Dimension tables: customer, product, region
 
