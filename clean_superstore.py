@@ -5,6 +5,7 @@ import sqlite3
 from datetime import datetime, timezone
 import uuid
 import pandas as pd
+import time
 
 
 # -------------------------
@@ -38,9 +39,13 @@ def clean_superstore(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict
     - no reading/writing files, no mkdir, no sqlite
     """
     report = {
+        "records_processed": int(len(df)),
+        "execution_time_sec": None,
+
         "rows_before": int(len(df)),
         "rows_after": None,
         "dropped_rows": 0,
+
         "invalid_counts": {},
         "rules_applied": [],
         "notes": [],
@@ -183,6 +188,13 @@ def run_pipeline(
     df = pd.read_csv(raw_path, encoding=encoding)
     clean_df, rejected_df, report = clean_superstore(df)
 
+    start = time.time()
+
+    clean_df, rejected_df, report = clean_superstore(df)
+
+    end = time.time()
+    report["execution_time_sec"] = round(end - start, 2)
+
     # save outputs
     clean_df.to_csv(clean_csv, index=False)
     rejected_df.to_csv(rejected_csv, index=False)
@@ -233,6 +245,13 @@ def main():
     print("Dropped    :", report["dropped_rows"])
     print("Invalid counts:", report["invalid_counts"])
     print("Outputs:", report.get("outputs"))
+
+    print("✅ Done")
+    print("Rows before:", report["rows_before"])
+    print("Rows after :", report["rows_after"])
+    print("Dropped    :", report["dropped_rows"])
+    print("Execution time:", report.get("execution_time_sec"), "sec")
+    print("Invalid counts:", report["invalid_counts"])
 
 
 if __name__ == "__main__":
