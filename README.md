@@ -140,9 +140,20 @@ Raw --> Validate --> Transform --> Model --> SQL --> BI
 
 ## 📊 Execution Proof
 
+### ⚙️ Batch Pipeline Metrics
+
+![Batch Pipeline Metrics](assets/01_batch_pipeline_metrics.png)
+
+- Processed **9,994 records/run**
+- Execution time: **~0.09 seconds**
+- Applied **6 validation rules**
+- Output: **0 invalid records after validation**
+
+---
+
 ### 📈 Dashboard Overview
 
-![Overview](assets/dashboard_overview.png)
+![Overview](assets/02_dashboard_overview.png)
 
 👉 High-level business insights from transformed dataset
 
@@ -150,7 +161,7 @@ Raw --> Validate --> Transform --> Model --> SQL --> BI
 
 ### 📉 Discount vs Profit Analysis
 
-![Discount](assets/dashboard_discount.png)
+![Discount](assets/03_dashboard_discount.png)
 
 👉 Demonstrates how discount impacts profitability
 
@@ -160,7 +171,9 @@ Raw --> Validate --> Transform --> Model --> SQL --> BI
 
 Generated after pipeline execution:
 
-* Cleaned dataset
+* Cleaned dataset: **9,994 records**
+* Rejected dataset: **0 invalid records**
+* Cleaning report with execution metrics
 * Fact & dimension tables
 * Analytical SQL views
 
