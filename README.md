@@ -62,22 +62,25 @@ Raw data is not directly usable in analytics.
 
 ---
 
-## 🏗 Architecture Overview
+## 🧭 Architecture Overview
 
-```mermaid
-flowchart LR
+This project demonstrates a **batch ETL and analytics pipeline** that transforms raw structured data into validated, analytics-ready datasets for business reporting.
 
-Raw["Raw CSV Data"]
-Validate["Data Validation"]
-Transform["Transformation (Pandas)"]
-Model["Star Schema Modeling"]
-SQL["SQL Analytical Views"]
-BI["BI Dashboard"]
+The pipeline uses **Python** for parsing, cleaning, validation, business rules, and logging, **SQL** for analytics preparation, and **Power BI** for dashboard reporting.
 
-Raw --> Validate --> Transform --> Model --> SQL --> BI
-```
+![Batch ETL Analytics Pipeline](assets/00_batch-etl-analytics-pipeline.png)
 
-👉 This pipeline ensures clean separation between ingestion, processing, and analytics layers
+**Design principle:** Transform raw batch data into validated, analytics-ready datasets using Python for ETL processing, SQL for analytics preparation, and Power BI for reporting.
+
+### Key Components
+
+- **Data Source:** CSV and structured batch data
+- **Python ETL Processing:** Parsing, cleaning, validation, business rules, and logging
+- **Prepared Data Layer:** Validated, cleaned, and standardized structured data
+- **SQL Analytics Layer:** Builds views, queries, and business metrics
+- **Power BI Dashboard:** Delivers business insights and visual reporting
+
+👉 **This pipeline ensures clean separation between ingestion, processing, analytics preparation, and reporting layers.**
 
 ---
 
