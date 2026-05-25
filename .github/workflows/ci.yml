@@ -27,6 +27,10 @@ jobs:
       - name: Run Ruff lint
         run: |
           python -m ruff check .
+        
+      - name: Run batch ETL pipeline
+        run: |
+          python clean_superstore.py
 
       - name: Run ETL output validation tests
         run: |
