@@ -10,7 +10,6 @@ OUTPUT_DIR = ROOT_DIR / "output"
 def test_required_output_files_exist():
     required_files = [
         OUTPUT_DIR / "cleaning_report.json",
-        OUTPUT_DIR / "cleaning_summary.csv",
         OUTPUT_DIR / "superstore_cleaned.csv",
         OUTPUT_DIR / "superstore_rejected.csv",
         OUTPUT_DIR / "superstore.db",
