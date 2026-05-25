@@ -11,6 +11,9 @@
 ![Logs](https://img.shields.io/badge/Logs-Structured-brightgreen)
 ![Layer](https://img.shields.io/badge/Layer-Data%20Foundation-purple)
 ![Quality](https://img.shields.io/badge/Data%20Quality-Validated-success)
+![CI](https://github.com/Chu-Thana/superstore-etl-analytics/actions/workflows/ci.yml/badge.svg)
+![Testing](https://img.shields.io/badge/Testing-pytest-0A9EDC?logo=pytest&logoColor=white)
+![Code Quality](https://img.shields.io/badge/Code%20Quality-Ruff-8A2BE2)
 
 ---
 
@@ -29,6 +32,23 @@ Key characteristics:
 - Analytics-ready outputs for downstream consumption (SQL + Power BI)  
 
 👉 This is not a simulation — it is a complete batch pipeline from raw data to business insights
+
+---
+
+## ⚙️ CI Validation
+
+![Project 1 Batch ETL CI](assets/cicd/project1-batch-etl-ci-success.png)
+
+This project includes a GitHub Actions CI workflow that runs automatically on every push to the `main` branch.
+
+The CI pipeline validates:
+
+- Code quality with Ruff
+- Batch ETL execution using `clean_superstore.py`
+- Generated output files after pipeline execution
+- Cleaned dataset availability with automated pytest validation
+
+👉 This helps ensure that the batch ETL pipeline remains reliable, reproducible, and ready for downstream analytics workflows.
 
 ---
 
