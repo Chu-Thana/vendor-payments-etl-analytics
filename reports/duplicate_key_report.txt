@@ -1,0 +1,131 @@
+DUPLICATE & KEY STRATEGY REPORT
+================================================================================
+
+Data path: E:\dev\project1_etl\data\raw\Vendor_Payments.csv
+Total rows checked: 3,354,965
+Chunk size: 100,000
+
+PURCHASE ORDER PROFILE
+--------------------------------------------------------------------------------
+Purchase Order null count: 0
+Purchase Order = Direct Payments count: 1,122,941
+Purchase Order = Direct Payments pct: 33.4710%
+
+CANDIDATE KEY DUPLICATE CHECK
+--------------------------------------------------------------------------------
+purchase_order
+  columns: ['Purchase Order']
+  unique_key_count: 1,568,358
+  uniqueness_pct: 46.7474%
+  duplicate_key_count: 432,819
+  duplicate_rows_beyond_first: 1,786,607
+  duplicate_rows_pct: 53.2526%
+  max_records_per_key: 1,122,941
+  top_duplicate_keys:
+    - count=1,122,941 | key=Direct Payments
+    - count=31 | key=000040860202
+    - count=27 | key=000003938101
+    - count=27 | key=000007065901
+    - count=27 | key=000007076101
+    - count=24 | key=000007121501
+    - count=24 | key=000018619902
+    - count=24 | key=000054033801
+    - count=23 | key=000033861701
+    - count=21 | key=000032716201
+
+purchase_order_supplier
+  columns: ['Purchase Order', 'Supplier & Other Non-Supplier Payees']
+  unique_key_count: 1,629,854
+  uniqueness_pct: 48.5804%
+  duplicate_key_count: 457,750
+  duplicate_rows_beyond_first: 1,725,111
+  duplicate_rows_pct: 51.4196%
+  max_records_per_key: 30,875
+  top_duplicate_keys:
+    - count=30,875 | key=Direct Payments||Single Payment Payees
+    - count=14,307 | key=Direct Payments||US BANK NATIONAL ASSOCIATION
+    - count=14,246 | key=Direct Payments||AMERICAN AIRLINES INC
+    - count=9,024 | key=Direct Payments||STAPLES BUSINESS ADVANTAGE
+    - count=8,733 | key=Direct Payments||DAILY JOURNAL CORPORATION
+    - count=8,528 | key=Direct Payments||BANK OF AMERICA NT & SA
+    - count=7,255 | key=Direct Payments||GRAINGER
+    - count=6,802 | key=Direct Payments||CLEMENT TRAVEL SERVICE INC
+    - count=6,583 | key=Direct Payments||MEDLINE INDUSTRIES INC
+    - count=6,216 | key=Direct Payments||ORIENTEX TRAVEL INC
+
+fiscal_year_purchase_order_supplier
+  columns: ['Fiscal Year', 'Purchase Order', 'Supplier & Other Non-Supplier Payees']
+  unique_key_count: 1,897,314
+  uniqueness_pct: 56.5524%
+  duplicate_key_count: 299,301
+  duplicate_rows_beyond_first: 1,457,651
+  duplicate_rows_pct: 43.4476%
+  max_records_per_key: 5,925
+  top_duplicate_keys:
+    - count=5,925 | key=2018||Direct Payments||Single Payment Payees
+    - count=4,525 | key=2019||Direct Payments||Single Payment Payees
+    - count=4,100 | key=2020||Direct Payments||Single Payment Payees
+    - count=3,075 | key=2021||Direct Payments||Single Payment Payees
+    - count=3,025 | key=2023||Direct Payments||Single Payment Payees
+    - count=2,875 | key=2022||Direct Payments||Single Payment Payees
+    - count=2,725 | key=2024||Direct Payments||Single Payment Payees
+    - count=2,650 | key=2025||Direct Payments||Single Payment Payees
+    - count=2,000 | key=2025||Direct Payments||US BANK NATIONAL ASSOCIATION
+    - count=1,975 | key=2025||Direct Payments||AMERICAN AIRLINES INC
+
+fiscal_year_department_purchase_order_supplier
+  columns: ['Fiscal Year', 'Department', 'Purchase Order', 'Supplier & Other Non-Supplier Payees']
+  unique_key_count: 1,924,911
+  uniqueness_pct: 57.3750%
+  duplicate_key_count: 307,243
+  duplicate_rows_beyond_first: 1,430,054
+  duplicate_rows_pct: 42.6250%
+  max_records_per_key: 975
+  top_duplicate_keys:
+    - count=975 | key=2021||DPH Public Health||Direct Payments||MEDLINE INDUSTRIES INC
+    - count=875 | key=2022||DPH Public Health||Direct Payments||MEDLINE INDUSTRIES INC
+    - count=875 | key=2025||DPH Public Health||Direct Payments||MEDLINE INDUSTRIES INC
+    - count=800 | key=2018||HSA Human Services Agency||Direct Payments||Single Payment Payees
+    - count=800 | key=2024||DPH Public Health||Direct Payments||MEDLINE INDUSTRIES INC
+    - count=750 | key=2022||HSA Human Services Agency||Direct Payments||Single Payment Payees
+    - count=675 | key=2026||DPH Public Health||Direct Payments||MEDLINE INDUSTRIES INC
+    - count=650 | key=2020||PUC Public Utilities Commsn||Direct Payments||PUC BUREAUS & WWE
+    - count=650 | key=2020||HSA Human Services Agency||Direct Payments||Single Payment Payees
+    - count=650 | key=2023||DPH Public Health||Direct Payments||MEDLINE INDUSTRIES INC
+
+business_composite_key
+  columns: ['Fiscal Year', 'Department Code', 'Program Code', 'Character Code', 'Object Code', 'Sub-object Code', 'Fund Code', 'Purchase Order', 'Supplier & Other Non-Supplier Payees', 'Contract Number']
+  unique_key_count: 3,157,381
+  uniqueness_pct: 94.1107%
+  duplicate_key_count: 43,427
+  duplicate_rows_beyond_first: 197,584
+  duplicate_rows_pct: 5.8893%
+  max_records_per_key: 18
+  top_duplicate_keys:
+    - count=18 | key=2020||MTA||CAP||NON_PERS_SVCS||OTH_CURR_EXP||535810||ENT_FUND~MTA_TRANSIT||Direct Payments||DAILY JOURNAL CORPORATION||<NULL>
+    - count=18 | key=2018||DPW||CAP||NON_PERS_SVCS||OTH_CURR_EXP||535810||ENT_FUND~SU_STREETS||Direct Payments||DAILY JOURNAL CORPORATION||<NULL>
+    - count=12 | key=2019||MTA||OPR||NON_PERS_SVCS||TRAVEL||521030||ENT_FUND~MTA_TRANSIT||Direct Payments||AMERICAN AIRLINES INC||<NULL>
+    - count=12 | key=2019||CFC||OPR||NON_PERS_SVCS||TRAVEL||521030||SP_REV~CHLD_FAMLY||Direct Payments||AMERICAN AIRLINES INC||<NULL>
+    - count=12 | key=2019||PUC||CAP||NON_PERS_SVCS||TAX_LIC_PERM||552210||ENT_FUND~SFWD_CPTL_PRJ||Direct Payments||CALIFORNIA DEPT OF FISH & WILDLIFE||<NULL>
+    - count=12 | key=2019||DPH||OPR||NON_PERS_SVCS||TAX_LIC_PERM||552115||ENT_FUND~SFGH_OP_||Direct Payments||CARDINALHEALTH MEDICAL PRODUCTS & SVCS||<NULL>
+    - count=12 | key=2019||MTA||OPR||NON_PERS_SVCS||PROF_SPEC_SVC||527510||ENT_FUND~MTA_TRANSIT||Direct Payments||COMPUTERLAND SILICON VALLEY||<NULL>
+    - count=12 | key=2019||PUC||OPR||NON_PERS_SVCS||TAX_LIC_PERM||552115||ENT_FUND~SFWD_OP||Direct Payments||CUMMINS PACIFIC LLC||<NULL>
+    - count=12 | key=2019||DPW||CAP||NON_PERS_SVCS||OTH_CURR_EXP||535810||ENT_FUND~SU_STREETS||Direct Payments||DAILY JOURNAL CORPORATION||<NULL>
+    - count=12 | key=2019||MTA||CAP||NON_PERS_SVCS||OTH_CURR_EXP||535810||ENT_FUND~MTA_TRANSIT||Direct Payments||DAILY JOURNAL CORPORATION||<NULL>
+
+FULL ROW DUPLICATE CHECK
+--------------------------------------------------------------------------------
+unique_full_row_hash_count: 3,354,965
+duplicate_full_row_hash_count: 0
+duplicate_full_rows_beyond_first: 0
+duplicate_full_rows_pct: 0.0000%
+
+RECOMMENDED KEY STRATEGY
+--------------------------------------------------------------------------------
+Do not use Purchase Order alone as a primary key.
+Evaluate business_composite_key as the natural deduplication key.
+If business_composite_key still has duplicates, use a deterministic row_hash for raw-level identity.
+For silver layer, keep both source fields and generated keys:
+  - source_row_hash
+  - business_composite_key
+  - ingestion metadata such as data_loaded_at
