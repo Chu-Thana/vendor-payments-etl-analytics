@@ -1,0 +1,140 @@
+TIME COVERAGE & FRESHNESS REPORT
+================================================================================
+
+Data path: E:\dev\project1_etl\data\raw\Vendor_Payments.csv
+Total rows checked: 3,354,965
+Chunk size: 100,000
+
+DATE PARSING QUALITY
+--------------------------------------------------------------------------------
+data_as_of invalid count: 0
+data_loaded_at invalid count: 0
+Purchase Order Date invalid count: 0
+Purchase Order Date null count: 1,318,993
+Purchase Order Date valid count: 2,035,972
+Purchase Order Date valid pct: 60.6853%
+
+DATE RANGE SUMMARY
+--------------------------------------------------------------------------------
+Fiscal Year min: 2007
+Fiscal Year max: 2026
+Purchase Order Date min: 2017-06-29 00:00:00
+Purchase Order Date max: 2026-05-24 00:00:00
+data_as_of min: 2017-12-16 10:14:44
+data_as_of max: 2026-05-24 02:07:09
+data_loaded_at min: 2026-05-25 03:01:24
+data_loaded_at max: 2026-05-25 03:01:24
+
+FRESHNESS CHECK
+--------------------------------------------------------------------------------
+Unique data_loaded_at timestamps: 1
+Top data_loaded_at values:
+  - 2026-05-25 03:01:24: 3,354,965 (100.0000%)
+
+FISCAL YEAR DISTRIBUTION
+--------------------------------------------------------------------------------
+2007: 82,347 (2.4545%)
+2008: 84,343 (2.5140%)
+2009: 82,678 (2.4643%)
+2010: 79,553 (2.3712%)
+2011: 79,687 (2.3752%)
+2012: 81,406 (2.4264%)
+2013: 84,167 (2.5087%)
+2014: 86,572 (2.5804%)
+2015: 86,934 (2.5912%)
+2016: 93,036 (2.7731%)
+2017: 93,934 (2.7999%)
+2018: 277,764 (8.2792%)
+2019: 327,380 (9.7581%)
+2020: 281,244 (8.3829%)
+2021: 247,739 (7.3842%)
+2022: 247,492 (7.3769%)
+2023: 252,426 (7.5240%)
+2024: 254,614 (7.5892%)
+2025: 275,987 (8.2262%)
+2026: 255,662 (7.6204%)
+
+PURCHASE ORDER YEAR DISTRIBUTION
+--------------------------------------------------------------------------------
+2017: 184,710 (9.0723% of valid PO dates)
+2018: 366,684 (18.0103% of valid PO dates)
+2019: 200,322 (9.8391% of valid PO dates)
+2020: 264,292 (12.9811% of valid PO dates)
+2021: 149,643 (7.3500% of valid PO dates)
+2022: 192,897 (9.4744% of valid PO dates)
+2023: 211,343 (10.3804% of valid PO dates)
+2024: 173,023 (8.4983% of valid PO dates)
+2025: 217,477 (10.6817% of valid PO dates)
+2026: 75,581 (3.7123% of valid PO dates)
+
+DATA_AS_OF YEAR DISTRIBUTION
+--------------------------------------------------------------------------------
+2017: 934,709 (27.8605%)
+2018: 216,388 (6.4498%)
+2019: 187,357 (5.5845%)
+2020: 442,471 (13.1885%)
+2021: 176,945 (5.2741%)
+2022: 195,040 (5.8135%)
+2023: 243,658 (7.2626%)
+2024: 292,341 (8.7137%)
+2025: 455,265 (13.5699%)
+2026: 210,791 (6.2830%)
+
+TOP PURCHASE ORDER MONTHS
+--------------------------------------------------------------------------------
+2018-07: 91,550 (4.4966% of valid PO dates)
+2018-06: 91,314 (4.4850% of valid PO dates)
+2017-08: 86,314 (4.2394% of valid PO dates)
+2023-05: 54,264 (2.6653% of valid PO dates)
+2018-05: 54,088 (2.6566% of valid PO dates)
+2025-09: 53,664 (2.6358% of valid PO dates)
+2020-07: 51,711 (2.5399% of valid PO dates)
+2020-01: 50,890 (2.4995% of valid PO dates)
+2020-04: 49,974 (2.4546% of valid PO dates)
+2022-01: 49,956 (2.4537% of valid PO dates)
+2019-06: 49,490 (2.4308% of valid PO dates)
+2017-09: 46,745 (2.2960% of valid PO dates)
+2017-07: 18,412 (0.9043% of valid PO dates)
+2025-07: 18,068 (0.8874% of valid PO dates)
+2024-07: 17,483 (0.8587% of valid PO dates)
+2026-03: 16,648 (0.8177% of valid PO dates)
+2025-10: 16,400 (0.8055% of valid PO dates)
+2026-04: 16,346 (0.8029% of valid PO dates)
+2018-01: 16,124 (0.7920% of valid PO dates)
+2019-07: 16,056 (0.7886% of valid PO dates)
+
+TOP DATA_AS_OF MONTHS
+--------------------------------------------------------------------------------
+2017-12: 934,709 (27.8605%)
+2018-08: 168,760 (5.0302%)
+2026-04: 132,580 (3.9518%)
+2020-10: 127,376 (3.7966%)
+2025-11: 92,096 (2.7451%)
+2024-06: 72,152 (2.1506%)
+2025-06: 67,157 (2.0017%)
+2025-09: 54,398 (1.6214%)
+2025-03: 54,132 (1.6135%)
+2024-08: 53,882 (1.6060%)
+2025-04: 53,701 (1.6006%)
+2024-10: 52,805 (1.5739%)
+2020-05: 52,436 (1.5629%)
+2021-09: 52,055 (1.5516%)
+2023-09: 51,763 (1.5429%)
+2025-02: 51,526 (1.5358%)
+2023-02: 50,774 (1.5134%)
+2020-03: 50,220 (1.4969%)
+2020-06: 48,062 (1.4326%)
+2019-03: 47,976 (1.4300%)
+
+FISCAL YEAR VS DATA_AS_OF YEAR CHECK
+--------------------------------------------------------------------------------
+Fiscal Year mismatch with data_as_of year: 2,245,758 (66.9383%)
+
+RECOMMENDED HANDLING
+--------------------------------------------------------------------------------
+Use Fiscal Year as the primary reporting period for dashboards and gold marts.
+Use Purchase Order Date as a secondary date when available; do not require it for all records.
+Use data_as_of as the source snapshot/freshness timestamp.
+Use data_loaded_at as the ingestion/load timestamp.
+Partition raw/silver data by Fiscal Year first; optionally add data_loaded_at date for ingestion tracking.
+For incremental design, data_as_of and data_loaded_at should be preserved as metadata fields.
