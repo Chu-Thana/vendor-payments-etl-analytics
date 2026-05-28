@@ -1,0 +1,113 @@
+BUSINESS RULE & RANGE VALIDATION REPORT
+================================================================================
+
+Data path: E:\dev\project1_etl\data\raw\Vendor_Payments.csv
+Total rows checked: 3,354,965
+Chunk size: 100,000
+
+AMOUNT RANGE CHECK
+--------------------------------------------------------------------------------
+Vouchers Paid
+  null_count: 0
+  negative_count: 82,631
+  zero_count: 164,058
+  positive_count: 3,108,276
+  abs(value) > 1M count: 57,818
+  abs(value) > 10M count: 14,468
+  abs(value) > 100M count: 3,901
+  abs(value) > 1B count: 796
+  min_record: {'value': -260391840.0, 'Fiscal Year': np.int64(2021), 'Department': 'DPH Public Health', 'Purchase Order': 'Direct Payments', 'Supplier': 'MCKESSON CORPORATION', 'Contract Number': np.float64(1000001791.0)}
+  max_record: {'value': 41516225004.16, 'Fiscal Year': np.int64(2025), 'Department': 'AIR Airport Commission', 'Purchase Order': 'Direct Payments', 'Supplier': 'THE BANK OF NEW YORK MELLON TRUST CO NA', 'Contract Number': np.float64(1000001791.0)}
+
+Vouchers Pending
+  null_count: 0
+  negative_count: 5,486
+  zero_count: 3,208,673
+  positive_count: 140,806
+  abs(value) > 1M count: 889
+  abs(value) > 10M count: 88
+  abs(value) > 100M count: 15
+  abs(value) > 1B count: 2
+  min_record: {'value': -79090016.0, 'Fiscal Year': np.int64(2018), 'Department': 'DPH Public Health', 'Purchase Order': 'Direct Payments', 'Supplier': 'DATAWAY INC', 'Contract Number': np.float64(1000001791.0)}
+  max_record: {'value': 3342321831.04, 'Fiscal Year': np.int64(2026), 'Department': 'AIR Airport Commission', 'Purchase Order': 'Direct Payments', 'Supplier': 'THE BANK OF NEW YORK MELLON TRUST CO NA', 'Contract Number': np.float64(1000001791.0)}
+
+Encumbrance Balance
+  null_count: 934,657
+  negative_count: 280
+  zero_count: 2,370,061
+  positive_count: 49,967
+  abs(value) > 1M count: 986
+  abs(value) > 10M count: 93
+  abs(value) > 100M count: 0
+  abs(value) > 1B count: 0
+  min_record: {'value': -336870.0, 'Fiscal Year': np.int64(2026), 'Department': 'DPH Public Health', 'Purchase Order': '000021923905', 'Supplier': 'DELOITTE CONSULTING LLP', 'Contract Number': np.float64(1000008478.0)}
+  max_record: {'value': 80253482.52, 'Fiscal Year': np.int64(2026), 'Department': 'DPW Public Works', 'Purchase Order': '000092438601', 'Supplier': 'SWINERTON BUILDERS', 'Contract Number': np.float64(1000035653.0)}
+
+Vouchers Pending Retainage
+  null_count: 0
+  negative_count: 169
+  zero_count: 3,201,803
+  positive_count: 152,993
+  abs(value) > 1M count: 2,543
+  abs(value) > 10M count: 257
+  abs(value) > 100M count: 17
+  abs(value) > 1B count: 0
+  min_record: {'value': -250000.0, 'Fiscal Year': np.int64(2007), 'Department': 'PUB Public Utilities Bureaus', 'Purchase Order': 'ENUH0300000301', 'Supplier': 'PROVEN MANAGEMENT INC', 'Contract Number': np.float64(nan)}
+  max_record: {'value': 247210781.99, 'Fiscal Year': np.int64(2013), 'Department': 'PUB Public Utilities Bureaus', 'Purchase Order': 'ENUW1200000201', 'Supplier': 'DRAGADOS USA/FLATIRON WEST/SUKUT CNST JV', 'Contract Number': np.float64(nan)}
+
+DATE BUSINESS RULE CHECK
+--------------------------------------------------------------------------------
+Purchase Order Date after data_as_of: 0 rows (0.0000%)
+Purchase Order Date after data_loaded_at: 0 rows (0.0000%)
+
+DATE RULE EXAMPLES
+--------------------------------------------------------------------------------
+No date rule violations found.
+
+FISCAL YEAR VS PURCHASE ORDER DATE CHECK
+--------------------------------------------------------------------------------
+Fiscal Year mismatch with Purchase Order Date year: 1,406,987 rows (41.9375%)
+
+FISCAL YEAR MISMATCH EXAMPLES
+--------------------------------------------------------------------------------
+1. {'Fiscal Year': 2019, 'Purchase Order': '000021258801', 'Department': 'PUC Public Utilities Commsn', 'Purchase Order Date': '2018/08/07', 'data_as_of': '2019/06/26 02:32:12 PM'}
+2. {'Fiscal Year': 2019, 'Purchase Order': '000021259601', 'Department': 'MTA Municipal Transprtn Agncy', 'Purchase Order Date': '2018/08/09', 'data_as_of': '2019/03/01 12:03:21 AM'}
+3. {'Fiscal Year': 2019, 'Purchase Order': '000021260401', 'Department': 'MTA Municipal Transprtn Agncy', 'Purchase Order Date': '2018/08/07', 'data_as_of': '2019/03/01 06:44:59 PM'}
+4. {'Fiscal Year': 2019, 'Purchase Order': '000021261201', 'Department': 'MTA Municipal Transprtn Agncy', 'Purchase Order Date': '2018/08/13', 'data_as_of': '2019/03/01 01:52:31 AM'}
+5. {'Fiscal Year': 2019, 'Purchase Order': '000021262401', 'Department': 'DPH Public Health', 'Purchase Order Date': '2018/08/07', 'data_as_of': '2019/02/28 10:05:28 PM'}
+6. {'Fiscal Year': 2019, 'Purchase Order': '000021262801', 'Department': 'DPH Public Health', 'Purchase Order Date': '2018/08/07', 'data_as_of': '2019/06/14 07:06:10 PM'}
+7. {'Fiscal Year': 2019, 'Purchase Order': '000021263301', 'Department': 'DPH Public Health', 'Purchase Order Date': '2018/08/07', 'data_as_of': '2019/02/28 08:53:06 PM'}
+8. {'Fiscal Year': 2019, 'Purchase Order': '000021263801', 'Department': 'DPH Public Health', 'Purchase Order Date': '2018/08/07', 'data_as_of': '2019/02/28 08:53:06 PM'}
+9. {'Fiscal Year': 2019, 'Purchase Order': '000021264001', 'Department': 'DPH Public Health', 'Purchase Order Date': '2018/08/07', 'data_as_of': '2019/02/28 10:05:28 PM'}
+10. {'Fiscal Year': 2019, 'Purchase Order': '000021264501', 'Department': 'DPH Public Health', 'Purchase Order Date': '2018/08/07', 'data_as_of': '2019/06/14 07:06:10 PM'}
+
+FISCAL YEAR DISTRIBUTION
+--------------------------------------------------------------------------------
+2007: 82,347
+2008: 84,343
+2009: 82,678
+2010: 79,553
+2011: 79,687
+2012: 81,406
+2013: 84,167
+2014: 86,572
+2015: 86,934
+2016: 93,036
+2017: 93,934
+2018: 277,764
+2019: 327,380
+2020: 281,244
+2021: 247,739
+2022: 247,492
+2023: 252,426
+2024: 254,614
+2025: 275,987
+2026: 255,662
+
+RECOMMENDED HANDLING
+--------------------------------------------------------------------------------
+Negative amounts should not be automatically rejected; they may represent adjustments, reversals, refunds, or corrections.
+Very large amount values should be flagged as outliers for review, not removed automatically.
+Purchase Order Date can be null and should not be required for all records.
+Fiscal Year should be used as the primary reporting period; Purchase Order Date can be used when available.
+If Purchase Order Date year differs from Fiscal Year, keep both fields and document the distinction.
