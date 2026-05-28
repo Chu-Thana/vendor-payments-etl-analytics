@@ -1,0 +1,88 @@
+SCHEMA REPORT
+================================================================================
+
+Data path: E:\dev\project1_etl\data\raw\Vendor_Payments.csv
+Sample rows checked: 100,000
+Expected column count: 33
+Actual column count: 33
+
+COLUMN CHECK
+--------------------------------------------------------------------------------
+Missing columns: None
+Extra columns: None
+
+COLUMN ORDER CHECK
+--------------------------------------------------------------------------------
+Column order matches expected schema.
+
+PANDAS DTYPES FROM SAMPLE
+--------------------------------------------------------------------------------
+Fiscal Year                               int64
+Related Govt Units                          str
+Organization Group Code                   int64
+Organization Group                          str
+Department Code                             str
+Department                                  str
+Program Code                                str
+Program                                     str
+Character Code                              str
+Character                                   str
+Object Code                                 str
+Object                                      str
+Sub-object Code                           int64
+Sub-object                                  str
+Fund Type Code                              str
+Fund Type                                   str
+Fund Code                                   str
+Fund                                        str
+Fund Category Code                        int64
+Fund Category                               str
+Purchase Order                              str
+Supplier & Other Non-Supplier Payees        str
+Vouchers Paid                           float64
+Vouchers Pending                        float64
+Encumbrance Balance                     float64
+Vouchers Pending Retainage              float64
+data_as_of                                  str
+data_loaded_at                              str
+Non-Profit Indicator                        str
+Contract Number                         float64
+Contract Title                              str
+Purchase Order Date                         str
+Purchasing Authority Description            str
+
+SAMPLE VALUES
+--------------------------------------------------------------------------------
+Fiscal Year: ['2019', '2019', '2019', '2019', '2019']
+Related Govt Units: ['NO', 'NO', 'NO', 'NO', 'NO']
+Organization Group Code: ['2', '2', '2', '2', '2']
+Organization Group: ['Public Works, Transportation & Commerce', 'Public Works, Transportation & Commerce', 'Public Works, Transportation & Commerce', 'Public Works, Transportation & Commerce', 'Public Works, Transportation & Commerce']
+Department Code: ['PUC', 'MTA', 'MTA', 'MTA', 'MTA']
+Department: ['PUC Public Utilities Commsn', 'MTA Municipal Transprtn Agncy', 'MTA Municipal Transprtn Agncy', 'MTA Municipal Transprtn Agncy', 'MTA Municipal Transprtn Agncy']
+Program Code: ['OPR', 'OPR', 'OPR', 'OPR', 'OPR']
+Program: ['Operating', 'Operating', 'Operating', 'Operating', 'Operating']
+Character Code: ['MTL_SUPP', 'NON_PERS_SVCS', 'NON_PERS_SVCS', 'NON_PERS_SVCS', 'MTL_SUPP']
+Character: ['Materials & Supplies', 'Non-Personnel Services', 'Non-Personnel Services', 'Non-Personnel Services', 'Materials & Supplies']
+Object Code: ['BLDG_CNST_SUP', 'TAX_LIC_PERM', 'TAX_LIC_PERM', 'TAX_LIC_PERM', 'OTH_MATL_SUPP']
+Object: ['Building/Construction Supplies', 'Taxes: Licenses/Permits', 'Taxes: Licenses/Permits', 'Taxes: Licenses/Permits', 'Other Materials/Supplies']
+Sub-object Code: ['542990', '552115', '552115', '552115', '549990']
+Sub-object: ['Other Bldg Maint Supplies', 'Sales-Use Tax', 'Sales-Use Tax', 'Sales-Use Tax', 'Other Materials & Supplies']
+Fund Type Code: ['ENT_FUND', 'ENT_FUND', 'ENT_FUND', 'ENT_FUND', 'ENT_FUND']
+Fund Type: ['Enterprise Funds', 'Enterprise Funds', 'Enterprise Funds', 'Enterprise Funds', 'Enterprise Funds']
+Fund Code: ['ENT_FUND~SFWD_OP', 'ENT_FUND~MTA_TRANSIT', 'ENT_FUND~MTA_TRANSIT', 'ENT_FUND~MTA_TRANSIT', 'ENT_FUND~SU_STREETS']
+Fund: ['SFWD-Operating Fund', 'Transit', 'Transit', 'Transit', 'Sustainable Streets']
+Fund Category Code: ['2', '1', '1', '1', '1']
+Fund Category: ['Annual Projects - Authority Control', 'Operating', 'Operating', 'Operating', 'Operating']
+Purchase Order: ['000021258801', '000021259601', '000021260401', '000021261201', '000021261901']
+Supplier & Other Non-Supplier Payees: ['KOFFLER ELEC MECH APPARATUS REPAIR INC', 'PENINSULA COLOR SERVICE LLC', 'DOC BAILEY CONSTRUCTION EQUIPMENT INC', 'GRAINGER', 'IPS GROUP INC']
+Vouchers Paid: ['2890.0', '2115.75', '2222.95', '13135.84', '74257.4']
+Vouchers Pending: ['0.0', '0.0', '0.0', '0.0', '0.0']
+Encumbrance Balance: ['0.0', '0.0', '0.0', '0.0', '0.0']
+Vouchers Pending Retainage: ['0.0', '0.0', '0.0', '0.0', '0.0']
+data_as_of: ['2019/06/26 02:32:12 PM', '2019/03/01 12:03:21 AM', '2019/03/01 06:44:59 PM', '2019/03/01 01:52:31 AM', '2019/12/10 09:43:59 AM']
+data_loaded_at: ['2026/05/25 03:01:24 AM', '2026/05/25 03:01:24 AM', '2026/05/25 03:01:24 AM', '2026/05/25 03:01:24 AM', '2026/05/25 03:01:24 AM']
+Non-Profit Indicator: ['X', 'X', 'X', 'X', 'X']
+Contract Number: ['1000001664.0', '1000003191.0', '1000008843.0', '1000011347.0', '1000001940.0']
+Contract Title: ['Industrial Supplies', '2013-09 PURCH & MAINT SS PARKI', 'Contract P-25-214-06-000-1', 'XEROX COPIERS-TONER & SUPPLIES', 'UV SYSTEM MAINTENANCE FOR TESL']
+Purchase Order Date: ['2018/08/07', '2018/08/09', '2018/08/07', '2018/08/13', '2019/07/19']
+Purchasing Authority Description: ['PROP Q AUTHORITY NOT BID', 'PROP Q AUTHORITY NOT BID', 'MUNICIPAL TRANSPORATION AGENCY AUTHORITY - DOCUMENT BID', 'Term Contract', 'MUNICIPAL TRANSPORATION AGENCY AUTHORITY - DOCUMENT BID']

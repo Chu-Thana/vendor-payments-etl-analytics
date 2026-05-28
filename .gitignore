@@ -24,3 +24,5 @@ output/*
 *.db
 *.csv
 *.json
+
+data/raw/

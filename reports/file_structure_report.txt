@@ -1,0 +1,59 @@
+FILE STRUCTURE REPORT
+================================================================================
+
+File path: E:\dev\project1_etl\data\raw\Vendor_Payments.csv
+File size: 1273.84 MB
+Detected encoding used: utf-8-sig
+Detected delimiter: ','
+Detected quotechar: '"'
+Has header: True
+
+HEADER
+--------------------------------------------------------------------------------
+Column count: 33
+Columns:
+1. Fiscal Year
+2. Related Govt Units
+3. Organization Group Code
+4. Organization Group
+5. Department Code
+6. Department
+7. Program Code
+8. Program
+9. Character Code
+10. Character
+11. Object Code
+12. Object
+13. Sub-object Code
+14. Sub-object
+15. Fund Type Code
+16. Fund Type
+17. Fund Code
+18. Fund
+19. Fund Category Code
+20. Fund Category
+21. Purchase Order
+22. Supplier & Other Non-Supplier Payees
+23. Vouchers Paid
+24. Vouchers Pending
+25. Encumbrance Balance
+26. Vouchers Pending Retainage
+27. data_as_of
+28. data_loaded_at
+29. Non-Profit Indicator
+30. Contract Number
+31. Contract Title
+32. Purchase Order Date
+33. Purchasing Authority Description
+
+ROW COUNT
+--------------------------------------------------------------------------------
+Total data rows: 3,354,965
+
+COLUMN COUNT CONSISTENCY
+--------------------------------------------------------------------------------
+33 columns: 3,354,965 rows
+
+BAD ROWS SAMPLE
+--------------------------------------------------------------------------------
+No malformed rows found based on column count.
