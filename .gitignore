@@ -26,3 +26,4 @@ output/*
 *.json
 
 data/raw/
+data/processed/
