@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 REPORT_PATH = PROJECT_ROOT / "reports" / "data_readiness_summary.md"
 

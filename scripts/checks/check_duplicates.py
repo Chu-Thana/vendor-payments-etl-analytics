@@ -4,7 +4,7 @@ import hashlib
 import pandas as pd
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 DATA_PATH = PROJECT_ROOT / "data" / "raw" / "Vendor_Payments.csv"
 REPORT_PATH = PROJECT_ROOT / "reports" / "duplicate_key_report.txt"
