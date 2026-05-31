@@ -27,3 +27,6 @@ output/*
 
 data/raw/
 data/processed/
+
+!data/sample/
+!data/sample/vendor_payments_sample.csv
