@@ -1,5 +1,5 @@
 from pathlib import Path
-from collections import Counter, defaultdict
+from collections import Counter
 import pandas as pd
 
 

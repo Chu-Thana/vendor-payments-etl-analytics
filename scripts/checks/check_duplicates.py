@@ -80,11 +80,6 @@ def check_duplicates():
     direct_payments_count = 0
     purchase_order_null_count = 0
 
-    sample_duplicate_keys = {
-        key_name: []
-        for key_name in KEY_CANDIDATES
-    }
-
     for chunk in pd.read_csv(
         DATA_PATH,
         chunksize=CHUNK_SIZE,
