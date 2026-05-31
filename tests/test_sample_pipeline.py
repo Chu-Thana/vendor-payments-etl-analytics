@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pandas as pd
 
 from scripts.pipeline.transform_silver import transform_to_silver
