@@ -27,14 +27,14 @@ METRIC_COLUMNS = [
 ]
 
 
-def aggregate_by_group(group_cols: list[str]) -> pd.DataFrame:
+def aggregate_by_group(group_cols: list[str], silver_file: Path = SILVER_FILE) -> pd.DataFrame:
     """
     Aggregate silver data by selected group columns using chunk processing.
     """
     result_parts = []
 
     for chunk in pd.read_csv(
-        SILVER_FILE,
+        silver_file,
         chunksize=CHUNK_SIZE,
         encoding="utf-8",
         low_memory=False,
@@ -123,17 +123,45 @@ def build_fund_category_mart() -> None:
     print(f"Created: {MART_FUND_CATEGORY}")
 
 
-def build_gold_marts() -> None:
+def build_gold_marts(silver_file: Path = SILVER_FILE, gold_dir: Path = GOLD_DATA_DIR) -> None:
     ensure_directories()
 
-    if not SILVER_FILE.exists():
-        raise FileNotFoundError(f"Silver file not found: {SILVER_FILE}")
+    if not silver_file.exists():
+        raise FileNotFoundError(f"Silver file not found: {silver_file}")
 
-    build_fiscal_year_mart()
-    build_department_mart()
-    build_supplier_top_n_mart(top_n=100)
-    build_pending_department_mart()
-    build_fund_category_mart()
+    gold_dir.mkdir(parents=True, exist_ok=True)
+
+    fiscal_year_file = gold_dir / "mart_spending_by_fiscal_year.csv"
+    department_file = gold_dir / "mart_spending_by_department.csv"
+    supplier_file = gold_dir / "mart_spending_by_supplier_top_n.csv"
+    pending_file = gold_dir / "mart_pending_by_department.csv"
+    fund_file = gold_dir / "mart_fund_category_summary.csv"
+
+    mart = aggregate_by_group(["fiscal_year"], silver_file)
+    mart = mart.sort_values("fiscal_year")
+    mart.to_csv(fiscal_year_file, index=False, encoding="utf-8")
+    print(f"Created: {fiscal_year_file}")
+
+    mart = aggregate_by_group(["fiscal_year", "organization_group", "department"], silver_file)
+    mart = mart.sort_values(["fiscal_year", "total_vouchers_paid"], ascending=[True, False])
+    mart.to_csv(department_file, index=False, encoding="utf-8")
+    print(f"Created: {department_file}")
+
+    mart = aggregate_by_group(["supplier_name"], silver_file)
+    mart = mart.sort_values("total_vouchers_paid", ascending=False).head(100)
+    mart.to_csv(supplier_file, index=False, encoding="utf-8")
+    print(f"Created: {supplier_file}")
+
+    mart = aggregate_by_group(["fiscal_year", "department"], silver_file)
+    mart = mart[mart["total_vouchers_pending"] != 0]
+    mart = mart.sort_values(["fiscal_year", "total_vouchers_pending"], ascending=[True, False])
+    mart.to_csv(pending_file, index=False, encoding="utf-8")
+    print(f"Created: {pending_file}")
+
+    mart = aggregate_by_group(["fiscal_year", "fund_type", "fund_category"], silver_file)
+    mart = mart.sort_values(["fiscal_year", "total_vouchers_paid"], ascending=[True, False])
+    mart.to_csv(fund_file, index=False, encoding="utf-8")
+    print(f"Created: {fund_file}")
 
     print("Gold mart build completed.")
 

@@ -128,20 +128,23 @@ def transform_chunk(chunk: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def transform_to_silver() -> None:
+def transform_to_silver(input_file=None, output_file=None) -> None:
     ensure_directories()
 
-    if not RAW_DATA_FILE.exists():
-        raise FileNotFoundError(f"Raw data file not found: {RAW_DATA_FILE}")
+    input_file = input_file or RAW_DATA_FILE
+    output_file = output_file or SILVER_OUTPUT_FILE
 
-    if SILVER_OUTPUT_FILE.exists():
-        SILVER_OUTPUT_FILE.unlink()
+    if not input_file.exists():
+        raise FileNotFoundError(f"Raw data file not found: {input_file}")
+
+    if output_file.exists():
+        output_file.unlink()
 
     total_rows = 0
     total_chunks = 0
 
     for chunk in pd.read_csv(
-        RAW_DATA_FILE,
+        input_file,
         chunksize=CHUNK_SIZE,
         encoding="utf-8-sig",
         low_memory=False,
@@ -151,18 +154,18 @@ def transform_to_silver() -> None:
         total_rows += len(silver_chunk)
 
         silver_chunk.to_csv(
-            SILVER_OUTPUT_FILE,
+            output_file,
             mode="a",
             index=False,
-            header=not SILVER_OUTPUT_FILE.exists(),
+            header=not output_file.exists(),
             encoding="utf-8",
         )
 
         print(f"Processed chunk {total_chunks}: {total_rows:,} rows total")
 
-    print(f"Silver transformation completed.")
+    print("Silver transformation completed.")
     print(f"Total rows processed: {total_rows:,}")
-    print(f"Output file: {SILVER_OUTPUT_FILE}")
+    print(f"Output file: {output_file}")
 
 
 if __name__ == "__main__":

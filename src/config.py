@@ -8,7 +8,10 @@ RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 SILVER_DATA_DIR = PROCESSED_DATA_DIR / "silver"
 GOLD_DATA_DIR = PROCESSED_DATA_DIR / "gold"
+
 SAMPLE_DATA_DIR = DATA_DIR / "sample"
+SAMPLE_DATA_FILE = SAMPLE_DATA_DIR / "vendor_payments_sample.csv"
+GOLD_SAMPLE_DATA_DIR = PROCESSED_DATA_DIR / "gold_sample"
 
 REPORTS_DIR = PROJECT_ROOT / "reports"
 
@@ -26,6 +29,7 @@ def ensure_directories() -> None:
         PROCESSED_DATA_DIR,
         SILVER_DATA_DIR,
         GOLD_DATA_DIR,
+        GOLD_SAMPLE_DATA_DIR,
         SAMPLE_DATA_DIR,
         REPORTS_DIR,
     ]:
