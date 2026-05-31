@@ -1,10 +1,13 @@
-name: CI - Project 1 Batch ETL
+name: CI - Project 1 Vendor Payments ETL
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - refactor/production-readiness
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   validate-etl:
@@ -27,11 +30,11 @@ jobs:
       - name: Run Ruff lint
         run: |
           python -m ruff check .
-        
-      - name: Run batch ETL pipeline
-        run: |
-          python clean_superstore.py
 
-      - name: Run ETL output validation tests
+      - name: Run sample ETL pipeline
         run: |
-          python -m pytest tests/test_data_outputs.py
+          python scripts/pipeline/run_pipeline.py --sample
+
+      - name: Run tests
+        run: |
+          python -m pytest -v
