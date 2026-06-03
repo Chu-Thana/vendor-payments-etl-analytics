@@ -1,6 +1,7 @@
 # 📊 Vendor Payments ETL & Analytics Pipeline — Validated Batch Processing
 
 > Production-style batch ETL pipeline for large-scale vendor payment analytics
+>
 > Raw data readiness → Silver transformation → Gold marts → Automated validation → CI
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
