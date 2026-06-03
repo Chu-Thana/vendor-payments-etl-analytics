@@ -10,7 +10,7 @@
 ![Data Quality](https://img.shields.io/badge/Data%20Quality-Validated-success)
 ![Testing](https://img.shields.io/badge/Testing-pytest-0A9EDC?logo=pytest\&logoColor=white)
 ![Code Quality](https://img.shields.io/badge/Code%20Quality-Ruff-8A2BE2)
-![CI](https://github.com/Chu-Thana/superstore-etl-analytics/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Chu-Thana/vendor-payments-etl-analytics/actions/workflows/ci.yml/badge.svg)
 
 ---
 
