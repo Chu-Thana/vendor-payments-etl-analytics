@@ -1,0 +1,66 @@
+SILVER OUTPUT VALIDATION REPORT
+================================================================================
+
+Silver file: E:\dev\project1_etl\data\processed\silver\vendor_payments_silver.csv
+Total rows checked: 3,354,965
+Column count: 49
+
+REQUIRED COLUMN CHECK
+--------------------------------------------------------------------------------
+All required silver columns are present.
+
+SOURCE ROW HASH CHECK
+--------------------------------------------------------------------------------
+Unique source_row_hash count: 3,354,965
+Total rows: 3,354,965
+source_row_hash uniqueness pct: 100.0000%
+
+FISCAL YEAR RANGE
+--------------------------------------------------------------------------------
+Fiscal year min: 2007
+Fiscal year max: 2026
+
+NULL COUNTS FOR REQUIRED COLUMNS
+--------------------------------------------------------------------------------
+source_row_hash: 0 nulls (0.0000%)
+business_composite_key: 0 nulls (0.0000%)
+fiscal_year: 0 nulls (0.0000%)
+department: 0 nulls (0.0000%)
+department_norm: 0 nulls (0.0000%)
+purchase_order: 0 nulls (0.0000%)
+supplier_name: 0 nulls (0.0000%)
+supplier_name_norm: 0 nulls (0.0000%)
+vouchers_paid: 0 nulls (0.0000%)
+vouchers_pending: 0 nulls (0.0000%)
+encumbrance_balance: 934,657 nulls (27.8589%)
+vouchers_pending_retainage: 0 nulls (0.0000%)
+data_as_of: 0 nulls (0.0000%)
+data_loaded_at: 0 nulls (0.0000%)
+purchase_order_date: 1,318,993 nulls (39.3147%)
+po_year: 1,318,993 nulls (39.3147%)
+po_month: 1,318,993 nulls (39.3147%)
+is_missing_department: 0 nulls (0.0000%)
+is_missing_purchase_order_date: 0 nulls (0.0000%)
+is_negative_paid: 0 nulls (0.0000%)
+is_large_paid_1m: 0 nulls (0.0000%)
+is_large_paid_10m: 0 nulls (0.0000%)
+is_large_paid_100m: 0 nulls (0.0000%)
+is_large_paid_1b: 0 nulls (0.0000%)
+is_fiscal_year_mismatch: 0 nulls (0.0000%)
+is_non_profit: 0 nulls (0.0000%)
+
+QUALITY FLAG TRUE COUNTS
+--------------------------------------------------------------------------------
+is_missing_department: 0 true (0.0000%)
+is_missing_purchase_order_date: 1,318,993 true (39.3147%)
+is_negative_paid: 82,631 true (2.4629%)
+is_large_paid_1m: 57,818 true (1.7234%)
+is_large_paid_10m: 14,468 true (0.4312%)
+is_large_paid_100m: 3,901 true (0.1163%)
+is_large_paid_1b: 796 true (0.0237%)
+is_fiscal_year_mismatch: 1,406,987 true (41.9375%)
+is_non_profit: 241,912 true (7.2106%)
+
+VALIDATION DECISION
+--------------------------------------------------------------------------------
+PASS: Silver output structure and row identity checks passed.

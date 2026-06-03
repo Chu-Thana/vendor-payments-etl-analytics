@@ -1,0 +1,96 @@
+MISSING VALUES & FIELD RULES REPORT
+================================================================================
+
+Data path: E:\dev\project1_etl\data\raw\Vendor_Payments.csv
+Total rows checked: 3,354,965
+Chunk size: 100,000
+
+FIELD RULE CONFIGURATION
+--------------------------------------------------------------------------------
+Critical columns: rows should fail validation if these are missing.
+  - Fiscal Year
+  - Purchase Order
+  - Supplier & Other Non-Supplier Payees
+  - Vouchers Paid
+  - data_as_of
+  - data_loaded_at
+
+Warning columns: rows can continue, but should be flagged or cleaned.
+  - Department
+  - Purchase Order Date
+  - Encumbrance Balance
+
+Optional columns: missing values are allowed.
+  - Contract Number
+  - Contract Title
+  - Purchasing Authority Description
+
+
+MISSING VALUE SUMMARY
+--------------------------------------------------------------------------------
+Fiscal Year: 0 nulls (0.0000%)
+Related Govt Units: 0 nulls (0.0000%)
+Organization Group Code: 0 nulls (0.0000%)
+Organization Group: 0 nulls (0.0000%)
+Department Code: 50 nulls (0.0015%)
+Department: 50 nulls (0.0015%)
+Program Code: 719 nulls (0.0214%)
+Program: 719 nulls (0.0214%)
+Character Code: 0 nulls (0.0000%)
+Character: 0 nulls (0.0000%)
+Object Code: 0 nulls (0.0000%)
+Object: 0 nulls (0.0000%)
+Sub-object Code: 0 nulls (0.0000%)
+Sub-object: 0 nulls (0.0000%)
+Fund Type Code: 0 nulls (0.0000%)
+Fund Type: 0 nulls (0.0000%)
+Fund Code: 0 nulls (0.0000%)
+Fund: 0 nulls (0.0000%)
+Fund Category Code: 3,828 nulls (0.1141%)
+Fund Category: 3,828 nulls (0.1141%)
+Purchase Order: 0 nulls (0.0000%)
+Supplier & Other Non-Supplier Payees: 0 nulls (0.0000%)
+Vouchers Paid: 0 nulls (0.0000%)
+Vouchers Pending: 0 nulls (0.0000%)
+Encumbrance Balance: 934,657 nulls (27.8589%)
+Vouchers Pending Retainage: 0 nulls (0.0000%)
+data_as_of: 0 nulls (0.0000%)
+data_loaded_at: 0 nulls (0.0000%)
+Non-Profit Indicator: 3,113,053 nulls (92.7894%)
+Contract Number: 2,319,351 nulls (69.1319%)
+Contract Title: 2,327,623 nulls (69.3785%)
+Purchase Order Date: 1,318,993 nulls (39.3147%)
+Purchasing Authority Description: 1,525,808 nulls (45.4791%)
+
+
+VALIDATION IMPACT SUMMARY
+--------------------------------------------------------------------------------
+Rows failing critical missing-value rules: 0 (0.0000%)
+Rows with warning-level missing values: 1,319,023 (39.3156%)
+
+
+CRITICAL FAILURE EXAMPLES
+--------------------------------------------------------------------------------
+No rows failed critical missing-value rules.
+
+
+WARNING EXAMPLES
+--------------------------------------------------------------------------------
+1. {'Fiscal Year': 2019, 'Purchase Order': '000028873101', 'Department': 'DPH Public Health', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+2. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'CII Commty Invest & Infrstrctr', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+3. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'CII Commty Invest & Infrstrctr', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+4. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'MYR Mayor', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+5. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'MYR Mayor', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+6. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'MYR Mayor', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+7. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'PUC Public Utilities Commsn', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+8. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'MYR Mayor', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+9. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'MYR Mayor', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+10. {'Fiscal Year': 2019, 'Purchase Order': 'Direct Payments', 'Department': 'MYR Mayor', 'Purchase Order Date': nan, 'Encumbrance Balance': 0.0}
+
+
+RECOMMENDED SILVER LAYER HANDLING
+--------------------------------------------------------------------------------
+Department: fill missing values with 'Unknown'.
+Purchase Order Date: keep null; use Fiscal Year and data_as_of as fallback time references.
+Contract Number: keep null; cast non-null values to string and remove trailing '.0'.
+Encumbrance Balance: keep null during validation; optionally fill with 0 in analytics marts if business logic requires it.

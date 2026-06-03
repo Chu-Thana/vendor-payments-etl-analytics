@@ -1,0 +1,75 @@
+DATA TYPE & PARSING REPORT
+================================================================================
+
+Data path: E:\dev\project1_etl\data\raw\Vendor_Payments.csv
+Total rows checked: 3,354,965
+Chunk size: 100,000
+
+NUMERIC PARSING CHECK
+--------------------------------------------------------------------------------
+Vouchers Paid
+  null_count: 0
+  invalid_numeric_count: 0
+  min: -260391840.0
+  max: 41516225004.16
+
+Vouchers Pending
+  null_count: 0
+  invalid_numeric_count: 0
+  min: -79090016.0
+  max: 3342321831.04
+
+Encumbrance Balance
+  null_count: 934,657
+  invalid_numeric_count: 0
+  min: -336870.0
+  max: 80253482.52
+
+Vouchers Pending Retainage
+  null_count: 0
+  invalid_numeric_count: 0
+  min: -250000.0
+  max: 247210781.99
+
+DATE PARSING CHECK
+--------------------------------------------------------------------------------
+data_as_of
+  null_count: 0
+  invalid_date_count: 0
+  min: 2017-12-16 10:14:44
+  max: 2026-05-24 02:07:09
+
+data_loaded_at
+  null_count: 0
+  invalid_date_count: 0
+  min: 2026-05-25 03:01:24
+  max: 2026-05-25 03:01:24
+
+Purchase Order Date
+  null_count: 1,318,993
+  invalid_date_count: 0
+  min: 2017-06-29 00:00:00
+  max: 2026-05-24 00:00:00
+
+FISCAL YEAR CHECK
+--------------------------------------------------------------------------------
+invalid_fiscal_year_count: 0
+min_fiscal_year: 2007
+max_fiscal_year: 2026
+
+CONTRACT NUMBER CHECK
+--------------------------------------------------------------------------------
+null_count: 2,319,351
+float_like_values_ending_with_dot_zero: 1,035,614
+note: Contract Number should be treated as string/id in the silver layer.
+
+CRITICAL COLUMN NULL CHECK
+--------------------------------------------------------------------------------
+Fiscal Year: 0 nulls (0.0000%)
+Department: 50 nulls (0.0015%)
+Purchase Order: 0 nulls (0.0000%)
+Supplier & Other Non-Supplier Payees: 0 nulls (0.0000%)
+Vouchers Paid: 0 nulls (0.0000%)
+data_as_of: 0 nulls (0.0000%)
+data_loaded_at: 0 nulls (0.0000%)
+Purchase Order Date: 1,318,993 nulls (39.3147%)

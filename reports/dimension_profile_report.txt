@@ -1,0 +1,296 @@
+DIMENSION CARDINALITY & VALUE CONSISTENCY REPORT
+================================================================================
+
+Data path: E:\dev\project1_etl\data\raw\Vendor_Payments.csv
+Total rows checked: 3,354,965
+Chunk size: 100,000
+
+DIMENSION SUMMARY
+--------------------------------------------------------------------------------
+Organization Group
+  raw_unique_count: 7
+  stripped_unique_count: 7
+  lower_unique_count: 7
+  null_count: 0 (0.0000%)
+  whitespace_issue_count: 0 (0.0000%)
+  special_values:
+    - None
+  top_values:
+    - 'Community Health': 1,160,890 (34.6021%)
+    - 'Public Works, Transportation & Commerce': 1,075,979 (32.0712%)
+    - 'General Administration & Finance': 394,233 (11.7507%)
+    - 'Public Protection': 299,790 (8.9357%)
+    - 'Culture & Recreation': 234,525 (6.9904%)
+    - 'Human Welfare & Neighborhood Development': 183,851 (5.4800%)
+    - 'General City Responsibilities': 5,697 (0.1698%)
+
+Department
+  raw_unique_count: 77
+  stripped_unique_count: 77
+  lower_unique_count: 73
+  null_count: 50 (0.0015%)
+  whitespace_issue_count: 0 (0.0000%)
+  note: case normalization reduces unique values.
+  special_values:
+    - None
+  top_values:
+    - 'DPH Public Health': 1,160,890 (34.6021%)
+    - 'MTA Municipal Transprtn Agncy': 244,341 (7.2830%)
+    - 'PUC Public Utilities Commsn': 240,238 (7.1607%)
+    - 'REC Recreation & Park Commsn': 111,930 (3.3362%)
+    - 'AIR Airport Commission': 109,331 (3.2588%)
+    - 'ADM GSA - City Administrator': 99,245 (2.9582%)
+    - 'WTR Water Enterprise': 96,383 (2.8728%)
+    - 'HSA Human Services Agency': 82,277 (2.4524%)
+    - 'DPW Public Works': 77,396 (2.3069%)
+    - 'ART Arts Commission': 72,630 (2.1649%)
+    - 'PRT Port': 70,443 (2.0997%)
+    - 'DPW GSA - Public Works': 69,374 (2.0678%)
+    - 'POL Police': 66,773 (1.9903%)
+    - 'SHF Sheriff': 56,875 (1.6952%)
+    - 'REG Elections': 46,442 (1.3843%)
+
+Program
+  raw_unique_count: 405
+  stripped_unique_count: 405
+  lower_unique_count: 405
+  null_count: 719 (0.0214%)
+  whitespace_issue_count: 0 (0.0000%)
+  special_values:
+    - None
+  top_values:
+    - 'Operating': 2,169,097 (64.6533%)
+    - 'Capital': 108,275 (3.2273%)
+    - 'Rail & Bus Services': 104,752 (3.1223%)
+    - 'Administrative': 67,715 (2.0184%)
+    - 'Administration': 57,110 (1.7023%)
+    - 'Elections': 40,833 (1.2171%)
+    - 'Water Transmission/ Distribution': 36,606 (1.0911%)
+    - 'SFGH - Acute Care - Hospital': 30,913 (0.9214%)
+    - 'Maintenance': 30,394 (0.9059%)
+    - 'Capital-CPC Funded': 24,569 (0.7323%)
+    - 'Building Repair And Maintenance': 22,791 (0.6793%)
+    - 'Water Source Of Supply': 22,228 (0.6625%)
+    - 'Wastewater Treatment': 20,745 (0.6183%)
+    - 'Water Capital Projects': 20,299 (0.6050%)
+    - 'Water Treatment': 17,841 (0.5318%)
+
+Character
+  raw_unique_count: 25
+  stripped_unique_count: 25
+  lower_unique_count: 25
+  null_count: 0 (0.0000%)
+  whitespace_issue_count: 0 (0.0000%)
+  special_values:
+    - None
+  top_values:
+    - 'Materials & Supplies': 1,484,470 (44.2470%)
+    - 'Non-Personnel Services': 1,265,641 (37.7244%)
+    - 'Non Personnel Services': 373,639 (11.1369%)
+    - 'City Grant Program': 80,783 (2.4079%)
+    - 'City Grant Programs': 54,537 (1.6256%)
+    - 'Capital Outlay': 29,263 (0.8722%)
+    - 'Aid Assistance': 28,822 (0.8591%)
+    - 'Debt Service': 20,855 (0.6216%)
+    - 'Mandatory Fringe Benefits': 6,281 (0.1872%)
+    - 'Fiduciary-Benefit Payments': 4,425 (0.1319%)
+    - 'Other Support/Care of Persons': 2,553 (0.0761%)
+    - 'Other Support&Care Of Persons': 1,469 (0.0438%)
+    - 'Aid Payments': 869 (0.0259%)
+    - 'Programmatic Projects': 345 (0.0103%)
+    - 'Services Of Other Depts': 189 (0.0056%)
+
+Object
+  raw_unique_count: 163
+  stripped_unique_count: 163
+  lower_unique_count: 161
+  null_count: 0 (0.0000%)
+  whitespace_issue_count: 0 (0.0000%)
+  note: case normalization reduces unique values.
+  special_values:
+    - None
+  top_values:
+    - 'Hospital: Clinic/Lab Supplies': 562,352 (16.7618%)
+    - 'Taxes: Licenses/Permits': 396,529 (11.8192%)
+    - 'Other Current Expenses': 302,034 (9.0026%)
+    - 'Professional/Specialized Svcs': 242,517 (7.2286%)
+    - 'Other Materials/Supplies': 208,632 (6.2186%)
+    - 'Profess & Specialized Svcs': 143,305 (4.2714%)
+    - 'Building & Constructn Supplies': 137,759 (4.1061%)
+    - 'Other Materials & Supplies': 117,655 (3.5069%)
+    - 'Inventories': 114,677 (3.4181%)
+    - 'Training': 111,466 (3.3224%)
+    - 'Safety': 89,201 (2.6588%)
+    - 'Membership Fees': 80,832 (2.4093%)
+    - 'Building/Construction Supplies': 67,575 (2.0142%)
+    - 'Equipment Maintenance Supplies': 66,107 (1.9704%)
+    - 'City Grant Programs': 54,537 (1.6256%)
+
+Sub-object
+  raw_unique_count: 413
+  stripped_unique_count: 413
+  lower_unique_count: 413
+  null_count: 0 (0.0000%)
+  whitespace_issue_count: 0 (0.0000%)
+  special_values:
+    - None
+  top_values:
+    - 'Sales-Use Tax': 326,120 (9.7205%)
+    - 'Other Hosp, Clinics&Lab Supply': 281,138 (8.3798%)
+    - 'Other Materials & Supplies': 120,326 (3.5865%)
+    - 'Inventories-Purchase': 114,471 (3.4120%)
+    - 'Training Costs Paid To Vendors': 108,353 (3.2296%)
+    - 'Community Based Org Srvcs': 95,414 (2.8440%)
+    - 'Medical Supplies': 86,648 (2.5827%)
+    - 'Other Office Supplies': 83,450 (2.4874%)
+    - 'Other Professional Services': 82,434 (2.4571%)
+    - 'Membership Fees': 80,832 (2.4093%)
+    - 'Other Medical Services': 72,290 (2.1547%)
+    - 'Other Current Expenses': 67,250 (2.0045%)
+    - 'Fees Licenses Permits': 59,575 (1.7757%)
+    - 'Pharmaceutical': 59,456 (1.7722%)
+    - 'Other Safety Expenses': 57,837 (1.7239%)
+
+Fund Type
+  raw_unique_count: 32
+  stripped_unique_count: 32
+  lower_unique_count: 32
+  null_count: 0 (0.0000%)
+  whitespace_issue_count: 0 (0.0000%)
+  special_values:
+    - None
+  top_values:
+    - 'Enterprise Funds': 1,386,528 (41.3276%)
+    - 'General Fund': 968,382 (28.8641%)
+    - 'Special Revenue Funds': 371,673 (11.0783%)
+    - 'PUC Water Department Funds': 126,605 (3.7737%)
+    - 'MTA Municipal Railway Funds': 122,297 (3.6453%)
+    - 'Internal Service Funds': 85,890 (2.5601%)
+    - 'PUC Hetch Hetchy Funds': 47,383 (1.4123%)
+    - 'PUC Wastewater Funds': 38,957 (1.1612%)
+    - 'SF International Airport Funds': 37,455 (1.1164%)
+    - 'General Hospital Medical Center Funds': 35,635 (1.0622%)
+    - 'Capital Projects Funds': 33,719 (1.0050%)
+    - 'Port Of San Francisco Funds': 24,203 (0.7214%)
+    - 'Laguna Honda Hospital Funds': 17,165 (0.5116%)
+    - 'Pension, Other Employee and Ot': 16,792 (0.5005%)
+    - 'Private Purpose Trust Fund': 13,436 (0.4005%)
+
+Fund
+  raw_unique_count: 417
+  stripped_unique_count: 417
+  lower_unique_count: 416
+  null_count: 0 (0.0000%)
+  whitespace_issue_count: 0 (0.0000%)
+  note: case normalization reduces unique values.
+  special_values:
+    - None
+  top_values:
+    - 'SFGH-Operating Fund': 662,466 (19.7458%)
+    - 'GF Annual Account Ctrl': 425,485 (12.6822%)
+    - 'General Fund': 287,953 (8.5829%)
+    - 'LHH-Operating Fund': 245,044 (7.3039%)
+    - 'GF Continuing Authority Ctrl': 120,920 (3.6042%)
+    - 'Muni Operating Fund': 115,972 (3.4567%)
+    - 'Transit': 96,304 (2.8705%)
+    - 'Water Operating Fund': 91,842 (2.7375%)
+    - 'SFWD-Operating Fund': 81,011 (2.4147%)
+    - 'GF Annual Authority Ctrl': 76,315 (2.2747%)
+    - 'SFIA-Operating Fund': 66,855 (1.9927%)
+    - 'Hetchy Operating Fund': 49,099 (1.4635%)
+    - 'PUC Operating Fund': 45,472 (1.3554%)
+    - 'Hetch Hetchy Operating Fund': 42,667 (1.2718%)
+    - 'Port Operating': 41,675 (1.2422%)
+
+Fund Category
+  raw_unique_count: 11
+  stripped_unique_count: 11
+  lower_unique_count: 11
+  null_count: 3,828 (0.1141%)
+  whitespace_issue_count: 0 (0.0000%)
+  special_values:
+    - None
+  top_values:
+    - 'Operating': 2,490,807 (74.2424%)
+    - 'Continuing Projects - Authority Control': 252,571 (7.5283%)
+    - 'Annual Projects - Authority Control': 150,253 (4.4785%)
+    - 'Continuing Projects': 134,586 (4.0115%)
+    - 'Work Orders/Overhead': 133,648 (3.9836%)
+    - 'Unspecified': 66,742 (1.9894%)
+    - 'Grants Projects': 48,826 (1.4553%)
+    - 'Grants': 35,057 (1.0449%)
+    - 'Annual Projects': 27,698 (0.8256%)
+    - 'Continuing Projects - Project Control': 10,949 (0.3264%)
+    - '<NULL>': 3,828 (0.1141%)
+
+Supplier & Other Non-Supplier Payees
+  raw_unique_count: 71,184
+  stripped_unique_count: 71,184
+  lower_unique_count: 71,019
+  null_count: 0 (0.0000%)
+  whitespace_issue_count: 0 (0.0000%)
+  note: case normalization reduces unique values.
+  special_values:
+    - None
+  top_values:
+    - 'MEDLINE INDUSTRIES INC': 681,540 (20.3144%)
+    - 'CARDINALHEALTH MEDICAL PRODUCTS & SVCS': 67,765 (2.0198%)
+    - 'GRAINGER': 47,493 (1.4156%)
+    - 'Single Payment Payees': 30,875 (0.9203%)
+    - 'XTECH': 29,987 (0.8938%)
+    - 'STAPLES BUSINESS ADVANTAGE': 23,532 (0.7014%)
+    - 'CENTER HARDWARE CO INC': 16,126 (0.4807%)
+    - 'KONICA MINOLTA BUSINESS SOLUTNS USA INC': 14,412 (0.4296%)
+    - 'US BANK NATIONAL ASSOCIATION': 14,386 (0.4288%)
+    - 'VORTECH INDUSTRIES': 14,251 (0.4248%)
+    - 'AMERICAN AIRLINES INC': 14,246 (0.4246%)
+    - 'COMPUTERLAND SILICON VALLEY': 13,616 (0.4058%)
+    - 'T & S TRADING & ENTERPRISE CO': 13,334 (0.3974%)
+    - 'SANTORA SALES': 12,697 (0.3785%)
+    - 'EN POINTE TECHNOLOGIES SALES INC': 11,612 (0.3461%)
+
+Non-Profit Indicator
+  raw_unique_count: 2
+  stripped_unique_count: 2
+  lower_unique_count: 2
+  null_count: 3,113,053 (92.7894%)
+  whitespace_issue_count: 0 (0.0000%)
+  special_values:
+    - None
+  top_values:
+    - '<NULL>': 3,113,053 (92.7894%)
+    - 'X': 241,912 (7.2106%)
+
+Purchasing Authority Description
+  raw_unique_count: 99
+  stripped_unique_count: 99
+  lower_unique_count: 99
+  null_count: 1,525,808 (45.4791%)
+  whitespace_issue_count: 0 (0.0000%)
+  special_values:
+    - None
+  top_values:
+    - '<NULL>': 1,525,808 (45.4791%)
+    - 'PROP Q AUTHORITY NOT BID': 283,463 (8.4491%)
+    - 'UNIV HEALTHSYSTEMS CONSORTIUM SERVICES - HEALTH DEPT USE ONLY - DOC BID': 273,754 (8.1597%)
+    - 'Term Contract': 154,603 (4.6082%)
+    - 'TERM CONTRACT PROFSERV-BID, ENVIRONMENTAL CONSULTING': 81,170 (2.4194%)
+    - 'MUNICIPAL TRANSPORATION AGENCY AUTHORITY - DOCUMENT BID': 80,817 (2.4089%)
+    - 'AUTHORIZED BY GRANT - NOT PURCHASING AUTHORITY': 66,009 (1.9675%)
+    - 'RELEASE AGAINST A CITY OR DEPARTMENTAL BLANK PURCHASE ORDER': 62,228 (1.8548%)
+    - 'CONSTRUCTION SERVICES': 53,197 (1.5856%)
+    - 'GRANTS ONLY - COMPETITIVE BID': 49,944 (1.4887%)
+    - 'PROP Q AUTHORITY WITH BID': 48,154 (1.4353%)
+    - 'Grant Competitive Solicitation': 46,743 (1.3932%)
+    - 'RECIPROCAL & OTHER AGREEMENTS WITH PUBLIC AGENCIES': 45,224 (1.3480%)
+    - 'NON-PURCHASING': 44,621 (1.3300%)
+    - 'AUTHORITY TO BE USED IN NP BPO/PO FOR RENT': 43,813 (1.3059%)
+
+RECOMMENDED HANDLING
+--------------------------------------------------------------------------------
+Trim leading/trailing whitespace for all dimension columns.
+Keep original text fields where needed, but create normalized versions for grouping.
+Use Department, Fund Category, Fund Type, Character, Object, and Fiscal Year as dashboard filters.
+Supplier is high-cardinality and should be searchable or top-N filtered rather than shown as a full dropdown.
+Non-Profit Indicator has high missingness and should be optional, not a primary filter.
+Purchasing Authority Description is useful for compliance-style analysis but may require grouping or top-N views.
