@@ -10,10 +10,12 @@ sys.path.append(str(PROJECT_ROOT))
 from src.config import (
     RAW_DATA_FILE,
     SAMPLE_DATA_DIR,
+    SILVER_STREAM_SAMPLE_DATA_FILE,
     STREAM_SAMPLE_DATA_FILE,
     STREAM_SAMPLE_ROWS,
 )
 from src.schema import EXPECTED_COLUMNS
+from scripts.pipeline.transform_silver import transform_to_silver
 
 
 SAMPLE_OUTPUT_FILE = SAMPLE_DATA_DIR / "vendor_payments_sample.csv"
@@ -108,7 +110,28 @@ def create_stream_sample_data() -> None:
     print(f"Stream sample data created: {STREAM_SAMPLE_DATA_FILE}")
     print(f"Stream sample rows: {len(stream_sample_df):,}")
 
+def create_silver_stream_sample_data() -> None:
+    """
+    Transform the 100,000-row raw stream sample into silver format.
+
+    This output is intended for Project 3 Kafka streaming demos so the
+    streaming pipeline consumes cleaned silver-level Vendor Payments records
+    instead of raw data.
+    """
+    if not STREAM_SAMPLE_DATA_FILE.exists():
+        raise FileNotFoundError(
+            f"Stream sample data file not found: {STREAM_SAMPLE_DATA_FILE}"
+        )
+
+    transform_to_silver(
+        input_file=STREAM_SAMPLE_DATA_FILE,
+        output_file=SILVER_STREAM_SAMPLE_DATA_FILE,
+    )
+
+    print(f"Silver stream sample created: {SILVER_STREAM_SAMPLE_DATA_FILE}")
+
 
 if __name__ == "__main__":
     create_sample_data()
     create_stream_sample_data()
+    create_silver_stream_sample_data()
