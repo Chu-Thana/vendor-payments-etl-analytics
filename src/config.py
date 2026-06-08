@@ -11,7 +11,14 @@ GOLD_DATA_DIR = PROCESSED_DATA_DIR / "gold"
 
 SAMPLE_DATA_DIR = DATA_DIR / "sample"
 SAMPLE_DATA_FILE = SAMPLE_DATA_DIR / "vendor_payments_sample.csv"
+STREAM_SAMPLE_DATA_FILE = SAMPLE_DATA_DIR / "vendor_payments_stream_sample_100k.csv"
+STREAM_SAMPLE_ROWS = 100_000
+
 GOLD_SAMPLE_DATA_DIR = PROCESSED_DATA_DIR / "gold_sample"
+
+SILVER_STREAM_SAMPLE_DATA_FILE = (
+    SILVER_DATA_DIR / "vendor_payments_silver_stream_sample_100k.csv"
+)
 
 REPORTS_DIR = PROJECT_ROOT / "reports"
 
