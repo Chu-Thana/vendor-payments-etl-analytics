@@ -1,7 +1,7 @@
 SILVER OUTPUT VALIDATION REPORT
 ================================================================================
 
-Silver file: E:\dev\project1_etl\data\processed\silver\vendor_payments_silver.csv
+Silver file: E:\dev\vendor-payments-etl-analytics\data\processed\silver\vendor_payments_silver.csv
 Total rows checked: 3,354,965
 Column count: 49
 

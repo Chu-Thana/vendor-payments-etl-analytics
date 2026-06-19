@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -22,9 +23,44 @@ SILVER_STREAM_SAMPLE_DATA_FILE = (
 
 REPORTS_DIR = PROJECT_ROOT / "reports"
 
+PIPELINE_SUMMARY_FILE = (
+    REPORTS_DIR / "pipeline_summary.json"
+)
+
+SAMPLE_PIPELINE_SUMMARY_FILE = (
+    REPORTS_DIR / "pipeline_summary_sample.json"
+)
+
+SILVER_VALIDATION_REPORT_FILE = (
+    REPORTS_DIR / "silver_output_validation_report.txt"
+)
+
+SAMPLE_SILVER_VALIDATION_REPORT_FILE = (
+    REPORTS_DIR / "silver_output_validation_report_sample.txt"
+)
+
+GOLD_VALIDATION_REPORT_FILE = (
+    REPORTS_DIR / "gold_output_validation_report.txt"
+)
+
+SAMPLE_GOLD_VALIDATION_REPORT_FILE = (
+    REPORTS_DIR / "gold_output_validation_report_sample.txt"
+)
+
 RAW_DATA_FILE = RAW_DATA_DIR / "Vendor_Payments.csv"
 
 CHUNK_SIZE = 100_000
+
+# ==================================
+# Business rule thresholds
+# ==================================
+LARGE_PAYMENT_THRESHOLD = float(
+    os.getenv("LARGE_PAYMENT_THRESHOLD", "1000000")
+)
+
+TELEGRAM_LARGE_PAYMENT_ALERT_LIMIT = int(
+    os.getenv("TELEGRAM_LARGE_PAYMENT_ALERT_LIMIT", "5")
+)
 
 
 def ensure_directories() -> None:

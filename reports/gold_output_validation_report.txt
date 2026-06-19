@@ -5,7 +5,7 @@ Overall status: PASS
 
 mart_spending_by_fiscal_year
 --------------------------------------------------------------------------------
-Path: E:\dev\project1_etl\data\processed\gold\mart_spending_by_fiscal_year.csv
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold\mart_spending_by_fiscal_year.csv
 Exists: True
 Status: PASS
 Row count: 20
@@ -26,7 +26,7 @@ Metric sums:
 
 mart_spending_by_department
 --------------------------------------------------------------------------------
-Path: E:\dev\project1_etl\data\processed\gold\mart_spending_by_department.csv
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold\mart_spending_by_department.csv
 Exists: True
 Status: PASS
 Row count: 1,121
@@ -47,7 +47,7 @@ Metric sums:
 
 mart_spending_by_supplier_top_n
 --------------------------------------------------------------------------------
-Path: E:\dev\project1_etl\data\processed\gold\mart_spending_by_supplier_top_n.csv
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold\mart_spending_by_supplier_top_n.csv
 Exists: True
 Status: PASS
 Row count: 100
@@ -68,7 +68,7 @@ Metric sums:
 
 mart_pending_by_department
 --------------------------------------------------------------------------------
-Path: E:\dev\project1_etl\data\processed\gold\mart_pending_by_department.csv
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold\mart_pending_by_department.csv
 Exists: True
 Status: PASS
 Row count: 642
@@ -89,7 +89,7 @@ Metric sums:
 
 mart_fund_category_summary
 --------------------------------------------------------------------------------
-Path: E:\dev\project1_etl\data\processed\gold\mart_fund_category_summary.csv
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold\mart_fund_category_summary.csv
 Exists: True
 Status: PASS
 Row count: 1,061

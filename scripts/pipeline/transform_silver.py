@@ -128,7 +128,10 @@ def transform_chunk(chunk: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def transform_to_silver(input_file=None, output_file=None) -> None:
+def transform_to_silver(
+    input_file: Path | None = None,
+    output_file: Path | None = None,
+) -> dict:
     ensure_directories()
 
     input_file = input_file or RAW_DATA_FILE
@@ -166,6 +169,14 @@ def transform_to_silver(input_file=None, output_file=None) -> None:
     print("Silver transformation completed.")
     print(f"Total rows processed: {total_rows:,}")
     print(f"Output file: {output_file}")
+
+    return {
+        "source_rows": total_rows,
+        "silver_rows": total_rows,
+        "chunk_count": total_chunks,
+        "output_file": str(output_file),
+        "available": output_file.exists(),
+    }
 
 
 if __name__ == "__main__":

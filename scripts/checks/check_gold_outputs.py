@@ -72,13 +72,64 @@ METRIC_COLUMNS = [
 ]
 
 
+def build_gold_file_configs(gold_dir: Path) -> dict:
+    return {
+        "mart_spending_by_fiscal_year": {
+            "path": gold_dir / "mart_spending_by_fiscal_year.csv",
+            "required_columns": [
+                "fiscal_year",
+                "total_vouchers_paid",
+                "total_vouchers_pending",
+                "record_count",
+            ],
+        },
+        "mart_spending_by_department": {
+            "path": gold_dir / "mart_spending_by_department.csv",
+            "required_columns": [
+                "fiscal_year",
+                "organization_group",
+                "department",
+                "total_vouchers_paid",
+                "record_count",
+            ],
+        },
+        "mart_spending_by_supplier_top_n": {
+            "path": gold_dir / "mart_spending_by_supplier_top_n.csv",
+            "required_columns": [
+                "supplier_name",
+                "total_vouchers_paid",
+                "record_count",
+            ],
+        },
+        "mart_pending_by_department": {
+            "path": gold_dir / "mart_pending_by_department.csv",
+            "required_columns": [
+                "fiscal_year",
+                "department",
+                "total_vouchers_pending",
+                "record_count",
+            ],
+        },
+        "mart_fund_category_summary": {
+            "path": gold_dir / "mart_fund_category_summary.csv",
+            "required_columns": [
+                "fiscal_year",
+                "fund_type",
+                "fund_category",
+                "total_vouchers_paid",
+                "record_count",
+            ],
+        },
+    }
+
+
 def validate_gold_file(name: str, config: dict) -> dict:
     file_path = config["path"]
     required_columns = config["required_columns"]
 
     result = {
         "name": name,
-        "path": file_path,
+        "path": str(file_path),
         "exists": file_path.exists(),
         "row_count": 0,
         "column_count": 0,
@@ -116,15 +167,20 @@ def validate_gold_file(name: str, config: dict) -> dict:
     return result
 
 
-def check_gold_outputs() -> None:
+def check_gold_outputs(
+    gold_dir: Path = GOLD_DATA_DIR,
+    report_path: Path = REPORT_PATH,
+) -> dict:
+    gold_files = build_gold_file_configs(gold_dir)
+
     results = [
         validate_gold_file(name, config)
-        for name, config in GOLD_FILES.items()
+        for name, config in gold_files.items()
     ]
 
-    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(REPORT_PATH, "w", encoding="utf-8") as report:
+    with open(report_path, "w", encoding="utf-8") as report:
         report.write("GOLD OUTPUT VALIDATION REPORT\n")
         report.write("=" * 80 + "\n\n")
 
@@ -165,7 +221,22 @@ def check_gold_outputs() -> None:
         else:
             report.write("FAIL: Review missing files, empty marts, or missing required columns.\n")
 
-    print(f"Done. Report saved to: {REPORT_PATH}")
+    print(f"Done. Report saved to: {report_path}")
+
+    return {
+        "status": "PASS" if overall_pass else "FAIL",
+        "mart_count": len(results),
+        "passed_mart_count": sum(
+            result["status"] == "PASS"
+            for result in results
+        ),
+        "failed_mart_count": sum(
+            result["status"] != "PASS"
+            for result in results
+        ),
+        "marts": results,
+        "report_file": str(report_path),
+    }
 
 
 if __name__ == "__main__":

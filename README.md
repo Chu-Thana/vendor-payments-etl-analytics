@@ -1,82 +1,162 @@
-# 📊 Vendor Payments ETL & Analytics Pipeline — Validated Batch Processing
+# 📊 Vendor Payments Batch ETL Pipeline
 
-> Production-style batch ETL pipeline for large-scale vendor payment analytics
->
-> Raw data readiness → Silver transformation → Gold marts → Automated validation → CI
-
-![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python\&logoColor=white)
 ![Pipeline](https://img.shields.io/badge/Pipeline-Batch%20ETL-orange)
 ![Processing](https://img.shields.io/badge/Processing-Pandas-lightblue)
-![Data Quality](https://img.shields.io/badge/Data%20Quality-Validated-success)
-![Testing](https://img.shields.io/badge/Testing-pytest-0A9EDC?logo=pytest\&logoColor=white)
+![Records](https://img.shields.io/badge/Records-3.35M%2B-darkblue)
+![Gold Marts](https://img.shields.io/badge/Gold%20Marts-5-success)
+![Testing](https://img.shields.io/badge/Testing-20%20Passed-0A9EDC?logo=pytest\&logoColor=white)
 ![Code Quality](https://img.shields.io/badge/Code%20Quality-Ruff-8A2BE2)
 ![CI](https://github.com/Chu-Thana/vendor-payments-etl-analytics/actions/workflows/ci.yml/badge.svg)
 
+Production-style Batch ETL pipeline for transforming large-scale vendor payment data into validated Silver datasets and analytics-ready Gold marts.
+
+This project is part of the **Vendor Payments Data Engineering Portfolio** and provides the trusted Batch foundation used by downstream orchestration, API serving, cloud publishing, dashboards, and web applications.
+
 ---
 
-## 📌 Summary
+## 📌 Project Summary
 
-This project refactors a small Superstore ETL project into a larger-scale **Vendor Payments ETL & Analytics Pipeline**.
+The pipeline processes more than **3.35 million vendor payment records** through a validated Raw → Silver → Gold workflow.
 
-The pipeline processes over **3.35 million vendor payment records**, performs data readiness checks, transforms raw data into a validated silver layer, builds analytics-ready gold marts, and validates outputs through automated tests and GitHub Actions CI.
+It demonstrates:
 
-The project demonstrates a production-style batch data engineering workflow:
+* Chunk-based processing for large CSV datasets
+* Data readiness profiling before transformation
+* Raw → Silver → Gold layered data architecture
+* Deterministic row identity and business-level key analysis
+* Data cleaning, parsing, normalization, and quality flags
+* Analytics-ready Gold mart generation
+* Silver and Gold output validation
+* Runtime metadata and execution summary generation
+* Sample mode for local testing and CI
+* Automated testing, Ruff linting, and GitHub Actions CI
+
+---
+
+## 🧭 Architecture
+
+![Validated Batch ETL Architecture](assets/00_validated-batch-etl-architecture.png)
+
+The pipeline follows this workflow:
 
 ```text
-Raw Data
-  → Data Readiness Checks
-  → Silver Transformation
-  → Silver Output Validation
-  → Gold Mart Build
-  → Gold Output Validation
-  → Automated Tests & CI
+Raw Data Source
+→ Data Readiness Checks
+→ Silver Transformation
+→ Gold Mart Build
+→ Silver Output Validation
+→ Gold Output Validation
+→ Runtime Metadata
+→ Automated Testing and CI
 ```
 
+### Layer Responsibilities
+
+* **Raw Data Source** — Original Vendor Payments CSV and committed representative sample
+* **Data Readiness Checks** — File structure, schema, parsing, missing values, duplicates, business rules, dimensions, and time coverage
+* **Silver Transformation** — Chunk processing, cleaning, parsing, normalized dimensions, deterministic keys, and quality flags
+* **Gold Mart Build** — Fiscal year, department, supplier, pending payment, and fund category aggregations
+* **Silver Validation** — Required columns, row counts, null counts, hash uniqueness, fiscal year coverage, and quality flags
+* **Gold Validation** — File availability, row counts, required columns, metric null checks, and metric summaries
+* **Runtime Metadata** — Execution status, runtime, row counts, chunk counts, Gold mart outputs, and validation results
+* **Automated Quality Assurance** — Pytest, Ruff, sample-mode execution, and GitHub Actions CI
+
 ---
 
-## 🧭 ETL Workflow
+## 📊 Project Metrics
 
-![Validated Batch ETL Workflow](assets/validated-batch-etl-workflow.png)
+The following metrics were generated from the latest successful full pipeline execution.
 
-**Design principle:** Validate each data layer before promoting outputs downstream.
+| Metric                       |          Value |
+| ---------------------------- | -------------: |
+| Source records processed     |      3,354,965 |
+| Silver records produced      |      3,354,965 |
+| Processing chunks            |             34 |
+| Chunk size                   |   100,000 rows |
+| Silver columns validated     |             49 |
+| Source row hash uniqueness   |           100% |
+| Gold marts produced          |              5 |
+| Gold marts passed validation |          5 / 5 |
+| Full pipeline runtime        | 609.70 seconds |
+| Full pipeline duration       |  10.16 minutes |
+| Automated tests passed       |             20 |
+| Pipeline status              |        Success |
 
 ---
 
-## 🔥 What This Project Demonstrates
+## 🔎 Runtime Metadata
 
-* Large-scale batch processing with **3.35M+ records**
-* Data readiness profiling before transformation
-* Raw → Silver → Gold layered pipeline design
-* Chunk-based processing for large CSV files
-* Data quality checks and validation reports
-* Deterministic row identity using `source_row_hash`
-* Business-level duplicate analysis using `business_composite_key`
-* Analytics-ready gold marts for reporting
-* Sample mode for fast local testing and CI
-* Unit tests, integration tests, Ruff linting, and GitHub Actions CI
+Each pipeline execution generates a machine-readable summary.
+
+Full mode:
+
+```text
+reports/pipeline_summary.json
+```
+
+Sample mode:
+
+```text
+reports/pipeline_summary_sample.json
+```
+
+The summary includes:
+
+```json
+{
+  "project": "Vendor Payments Batch ETL",
+  "pipeline_version": "1.0.0",
+  "mode": "FULL",
+  "status": "success",
+  "runtime_seconds": 609.7,
+  "configuration": {
+    "chunk_size": 100000
+  },
+  "source": {
+    "row_count": 3354965,
+    "available": true
+  },
+  "silver": {
+    "row_count": 3354965,
+    "chunk_count": 34,
+    "available": true
+  },
+  "gold": {
+    "mart_count": 5
+  }
+}
+```
+
+The metadata is generated from the current execution results rather than manually maintained metrics.
+
+![Pipeline Summary Overview](assets/02_pipeline-summary-overview.png)
 
 ---
 
 ## 📂 Dataset
 
-The source dataset is a vendor payments dataset containing government payment and purchase order records.
+The source dataset contains government vendor payment and purchase order records.
 
 The data includes:
 
 * Fiscal year
-* Department and organization group
+* Organization group and department
 * Program and fund information
-* Supplier / payee name
+* Supplier or payee name
 * Purchase order reference
-* Voucher paid amount
-* Voucher pending amount
+* Voucher paid and pending amounts
 * Encumbrance balance
 * Contract information
-* Data freshness timestamps
+* Source freshness timestamps
 
-The full raw dataset is stored locally and is not committed to GitHub due to file size.
+The full source dataset is stored locally and excluded from GitHub because of its size.
 
-A representative sample dataset is included for testing and CI:
+```text
+data/raw/Vendor_Payments.csv
+```
+
+A representative sample is committed for testing and CI:
 
 ```text
 data/sample/vendor_payments_sample.csv
@@ -86,54 +166,46 @@ data/sample/vendor_payments_sample.csv
 
 ## 🧪 Data Readiness Checks
 
-Before building the ETL pipeline, the raw dataset was profiled across multiple readiness dimensions.
+The source dataset was profiled before designing the ETL transformations.
 
-| Check                            | Purpose                                                              |
-| -------------------------------- | -------------------------------------------------------------------- |
-| File Structure Check             | Validate file size, delimiter, header, row count, and malformed rows |
-| Schema Check                     | Confirm expected columns and column order                            |
-| Data Type & Parsing Check        | Validate numeric and date parsing                                    |
-| Missing Value Rules              | Define critical, warning, and optional fields                        |
-| Duplicate & Key Strategy         | Evaluate primary key candidates and duplicate behavior               |
-| Business Rule & Range Validation | Detect negative values, outliers, and date logic issues              |
-| Dimension Cardinality            | Profile departments, suppliers, funds, and other dimensions          |
-| Time Coverage & Freshness        | Analyze fiscal year coverage and timestamp freshness                 |
+| Check               | Purpose                                                              |
+| ------------------- | -------------------------------------------------------------------- |
+| File Structure      | Validate file size, delimiter, header, row count, and malformed rows |
+| Schema              | Confirm expected columns and column order                            |
+| Data Types          | Validate numeric, date, timestamp, and identifier parsing            |
+| Missing Values      | Separate critical, warning-level, and optional fields                |
+| Duplicate Strategy  | Evaluate full-row identity and business-level keys                   |
+| Business Rules      | Detect negative payments, large values, and date inconsistencies     |
+| Dimension Profiling | Analyze departments, suppliers, programs, and funds                  |
+| Time Coverage       | Validate fiscal year range and source freshness timestamps           |
 
-### Readiness Result
+Readiness result:
 
 ```text
-Final status: READY WITH DESIGN WARNINGS
+READY WITH DESIGN WARNINGS
 ```
 
-The dataset is suitable for refactoring into a production-style ETL pipeline, with important design decisions around nullable purchase order dates, non-unique purchase order values, large payment outliers, and fiscal year reporting logic.
+The warnings are handled through cleaning, nullable-field rules, deterministic keys, normalized dimensions, and explicit data quality flags.
 
 ---
 
-## 🏗️ Pipeline Architecture
+## 🥈 Silver Transformation
 
-### 1. Raw Layer
+The Silver layer standardizes the raw dataset while preserving row-level traceability.
 
-The raw layer stores the original vendor payments CSV file locally.
+Processing includes:
 
-```text
-data/raw/Vendor_Payments.csv
-```
-
-The raw file is excluded from GitHub because it is large.
-
-### 2. Silver Layer
-
-The silver transformation performs:
-
-* Schema validation
-* Column renaming to snake_case
+* Expected schema validation
+* Chunk-based CSV processing
+* Snake-case column renaming
 * Numeric cleaning
 * Date and timestamp parsing
-* Contract number cleaning
+* Contract number normalization
 * Text trimming and normalization
-* `source_row_hash` generation
-* `business_composite_key` generation
-* Data quality flag creation
+* Deterministic `source_row_hash`
+* Business-level `business_composite_key`
+* Fiscal year and purchase-order date comparison
+* Data quality flag generation
 
 Silver output:
 
@@ -141,264 +213,376 @@ Silver output:
 data/processed/silver/vendor_payments_silver.csv
 ```
 
-### 3. Gold Layer
-
-The gold layer creates analytics-ready marts:
+Key quality flags include:
 
 ```text
-data/processed/gold/
-  mart_spending_by_fiscal_year.csv
-  mart_spending_by_department.csv
-  mart_spending_by_supplier_top_n.csv
-  mart_pending_by_department.csv
-  mart_fund_category_summary.csv
+is_missing_department
+is_missing_purchase_order_date
+is_negative_paid
+is_large_paid_1m
+is_large_paid_10m
+is_large_paid_100m
+is_large_paid_1b
+is_fiscal_year_mismatch
+is_non_profit
 ```
-
-These marts support analysis such as:
-
-* Spending trend by fiscal year
-* Department spending
-* Top supplier payments
-* Pending voucher monitoring
-* Fund category summary
 
 ---
 
-## ✅ Validation Strategy
+## 🥇 Gold Analytics Marts
 
-This project validates each layer before downstream use.
+The Gold layer creates five analytics-ready datasets.
 
-### Silver Output Validation
+| Mart                              | Purpose                             |  Rows |
+| --------------------------------- | ----------------------------------- | ----: |
+| `mart_spending_by_fiscal_year`    | Fiscal year spending trends         |    20 |
+| `mart_spending_by_department`     | Department-level spending analytics | 1,121 |
+| `mart_spending_by_supplier_top_n` | Top supplier payment analysis       |   100 |
+| `mart_pending_by_department`      | Pending voucher monitoring          |   642 |
+| `mart_fund_category_summary`      | Fund type and category analytics    | 1,061 |
 
-Checks include:
+Gold output directory:
 
+```text
+data/processed/gold/
+```
+
+Each mart contains aggregated financial metrics, record counts, supplier counts, and selected data quality indicators.
+
+---
+
+## ✅ Validation
+
+The pipeline validates both Silver and Gold outputs before reporting a successful execution.
+
+### Silver Validation
+
+Silver validation checks:
+
+* Output file availability
+* Total row count
 * Required columns
 * Null counts
-* Hash uniqueness
+* Deterministic row hash uniqueness
 * Fiscal year range
-* Data quality flag counts
+* Quality flag counts
 
-### Gold Output Validation
+Latest result:
 
-Checks include:
+```text
+Status: PASS
+Rows validated: 3,354,965
+Columns validated: 49
+Missing required columns: 0
+Source row hash uniqueness: 100%
+Fiscal year range: 2007–2026
+```
+
+![Silver Validation Summary](assets/03_silver-validation-summary.png)
+
+### Gold Validation
+
+Gold validation checks:
 
 * Gold mart file existence
-* Row counts
+* Non-empty output
 * Required columns
 * Metric null counts
-* Metric summaries
+* Aggregated metric summaries
+* Individual mart validation status
+
+Latest result:
+
+```text
+Status: PASS
+Gold marts validated: 5
+Passed marts: 5
+Failed marts: 0
+```
+
+![Gold Validation Summary](assets/04_gold-validation-summary.png)
+
+---
+
+## 🖥️ Execution Evidence
+
+The full pipeline processed all **3,354,965 records** in 34 chunks and generated all five Gold marts.
+
+```text
+Mode: FULL
+Status: success
+Runtime: 609.70 seconds
+Duration: 10.16 minutes
+```
+
+![Full Batch ETL Execution](assets/01_full-batch-etl-execution-evidence.png)
 
 ---
 
 ## 🧪 Automated Testing
 
-The project includes both unit tests and integration tests.
+The project contains unit, integration, sample pipeline, streaming sample configuration, and metadata tests.
 
-### Unit Tests
-
-Unit tests validate:
+Validation covers:
 
 * Schema definitions
-* Column rename mapping
+* Column rename mappings
+* Required source columns
 * Numeric cleaning
 * Contract number cleaning
 * Text normalization
-* Date parsing
-* Row hash and composite key generation
+* Timestamp and date parsing
+* Deterministic row hashing
+* Business composite key generation
+* Sample Silver output generation
+* Gold mart generation
+* Streaming sample configuration
+* Structured pipeline execution metrics
 
-### Integration Test
+Run tests:
 
-The integration test runs the sample ETL pipeline:
-
-```text
-sample data → silver output → gold marts
+```powershell
+python -m pytest -v
 ```
 
-Current test status:
+Run code quality checks:
+
+```powershell
+python -m ruff check .
+```
+
+Current result:
 
 ```text
-15 passed
+20 tests passed
+Ruff passed
 ```
+
+![Tests and Code Quality Evidence](assets/05_tests-and-code-quality-evidence.png)
 
 ---
 
-## ⚙️ CI/CD
+## ⚙️ Continuous Integration
 
-GitHub Actions runs automatically on push and pull requests.
+GitHub Actions runs on pushes and pull requests.
 
-The CI workflow performs:
+The workflow performs:
 
-1. Checkout repository
-2. Set up Python
-3. Install dependencies
-4. Run Ruff lint
-5. Run sample ETL pipeline
-6. Run pytest
+```text
+Repository checkout
+→ Python environment setup
+→ Dependency installation
+→ Ruff linting
+→ Sample ETL execution
+→ Pytest validation
+```
 
-CI uses the committed sample dataset, not the full raw dataset.
+The CI pipeline uses the committed representative sample instead of the full local dataset.
 
-```bash
+```powershell
 python scripts/pipeline/run_pipeline.py --sample
 python -m pytest -v
 ```
 
+![Project 1 CI Success](assets/cicd/project1-batch-etl-ci-success.png)
+
 ---
 
-## 🚀 How to Run
+## 🗂️ Project Structure
 
-### Run Full Pipeline
+```text
+vendor-payments-etl-analytics/
+│
+├── assets/
+│   ├── cicd/
+│   ├── 00_validated-batch-etl-architecture.png
+│   ├── 01_full-batch-etl-execution-evidence.png
+│   ├── 02_pipeline-summary-overview.png
+│   ├── 03_silver-validation-summary.png
+│   ├── 04_gold-validation-summary.png
+│   └── 05_tests-and-code-quality-evidence.png
+│
+├── data/
+│   ├── raw/
+│   ├── sample/
+│   └── processed/
+│       ├── silver/
+│       ├── gold/
+│       └── gold_sample/
+│
+├── reports/
+│   ├── data_readiness_summary.md
+│   ├── pipeline_summary.json
+│   ├── silver_output_validation_report.txt
+│   └── gold_output_validation_report.txt
+│
+├── scripts/
+│   ├── checks/
+│   └── pipeline/
+│
+├── src/
+│   ├── cleaning.py
+│   ├── config.py
+│   ├── keys.py
+│   └── schema.py
+│
+├── tests/
+│   ├── test_cleaning.py
+│   ├── test_keys.py
+│   ├── test_pipeline_metadata.py
+│   ├── test_sample_pipeline.py
+│   ├── test_schema.py
+│   └── test_stream_sample.py
+│
+├── .github/workflows/ci.yml
+├── pyproject.toml
+├── pytest.ini
+├── requirements.txt
+└── README.md
+```
 
-Use this when the full raw dataset exists locally:
+---
 
-```bash
+## ▶️ Run Locally
+
+Create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+Install dependencies:
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### Run the Full Pipeline
+
+The full source CSV must exist locally.
+
+```powershell
 python scripts/pipeline/run_pipeline.py
 ```
 
-This processes the full vendor payments dataset.
+Generated outputs:
 
-### Run Sample Pipeline
+```text
+data/processed/silver/vendor_payments_silver.csv
+data/processed/gold/
+reports/pipeline_summary.json
+reports/silver_output_validation_report.txt
+reports/gold_output_validation_report.txt
+```
 
-Use this for fast local testing or CI:
+### Run the Sample Pipeline
 
-```bash
+```powershell
 python scripts/pipeline/run_pipeline.py --sample
 ```
 
-This uses:
-
-```text
-data/sample/vendor_payments_sample.csv
-```
-
-and writes sample outputs to:
+Generated sample outputs:
 
 ```text
 data/processed/silver/vendor_payments_silver_sample.csv
 data/processed/gold_sample/
-```
-
----
-
-## 🧪 Run Tests
-
-```bash
-python -m pytest -v
-```
-
-Run Ruff lint:
-
-```bash
-python -m ruff check .
-```
-
----
-
-## 📁 Project Structure
-
-```text
-project1_etl/
-  data/
-    raw/                         # Local raw data, not committed
-    sample/                      # Committed representative sample data
-    processed/
-      silver/                    # Generated silver outputs
-      gold/                      # Generated gold marts
-      gold_sample/               # Generated sample-mode gold marts
-
-  scripts/
-    checks/                      # Data readiness and output validation scripts
-    pipeline/                    # ETL pipeline scripts
-
-  src/
-    config.py                    # Paths and pipeline configuration
-    schema.py                    # Expected schema and column groups
-    cleaning.py                  # Cleaning utilities
-    keys.py                      # Hash and composite key utilities
-
-  tests/
-    test_schema.py
-    test_cleaning.py
-    test_keys.py
-    test_sample_pipeline.py
-
-  reports/                       # Profiling and validation reports
-  .github/workflows/ci.yml       # GitHub Actions CI workflow
+reports/pipeline_summary_sample.json
+reports/silver_output_validation_report_sample.txt
+reports/gold_output_validation_report_sample.txt
 ```
 
 ---
 
 ## 🧠 Key Engineering Decisions
 
+### Why use chunk-based processing?
+
+The full source contains more than 3.35 million records.
+
+Processing the CSV in 100,000-row chunks reduces peak memory usage and supports larger local datasets without loading the entire source file at once.
+
 ### Why use sample mode?
 
-The full dataset contains more than 3.35 million records, so CI should not depend on the full raw file.
+The full dataset is too large to commit and should not be required by CI.
 
-Sample mode enables fast and reliable validation in GitHub Actions.
+Sample mode provides a reproducible execution path for local validation and GitHub Actions.
 
 ### Why use `source_row_hash`?
 
-The dataset does not have a simple unique primary key.
+The source dataset does not contain a reliable single-column primary key.
 
-`source_row_hash` provides deterministic row-level identity for raw and silver layers.
+`source_row_hash` provides deterministic row-level identity and supports validation of row preservation through the Silver layer.
 
-### Why not use `Purchase Order` as a primary key?
+### Why use a business composite key?
 
-`Purchase Order` is not unique and includes many `Direct Payments` records.
+Purchase order values are not unique and include many direct-payment records.
 
-It is kept as a reference field, not used as the primary key.
+The business composite key supports business-level duplicate analysis without treating purchase order as a primary key.
 
-### Why use `Fiscal Year` as the main reporting period?
+### Why use Fiscal Year as the reporting period?
 
-`Purchase Order Date` is nullable for many records.
+Purchase order dates are nullable for many records.
 
-`Fiscal Year` is more reliable as the primary reporting period for analytics and gold marts.
+Fiscal year provides more reliable and complete reporting coverage for Gold marts and downstream analytics.
 
-### Why flag negative and large amounts instead of rejecting them?
+### Why flag negative and large amounts?
 
-Negative and large payment values may represent adjustments, reversals, refunds, corrections, or legitimate large government payments.
+Negative and unusually large amounts may represent adjustments, refunds, reversals, corrections, or legitimate high-value payments.
 
-The pipeline flags these records instead of automatically removing them.
+The pipeline preserves these records and creates explicit quality flags instead of rejecting them automatically.
 
----
+### Why generate runtime metadata?
 
-## 📊 Gold Marts
+Console output and text reports are useful for people but difficult for downstream systems to consume.
 
-| Mart                              | Purpose                               |
-| --------------------------------- | ------------------------------------- |
-| `mart_spending_by_fiscal_year`    | Fiscal year spending trend            |
-| `mart_spending_by_department`     | Department-level spending analytics   |
-| `mart_spending_by_supplier_top_n` | Top supplier payment analysis         |
-| `mart_pending_by_department`      | Pending voucher monitoring            |
-| `mart_fund_category_summary`      | Fund type and fund category analytics |
+The JSON execution summary converts pipeline outputs, validation results, and runtime measurements into structured, verifiable portfolio evidence.
 
 ---
 
-## 🔗 Role in the Data Platform
-
-This project represents the **batch ETL foundation layer** of a broader data engineering platform.
+## 🔗 Role in the Vendor Payments Data Platform
 
 ```text
-Project 1: Batch ETL Foundation
-Project 2: API Serving Layer
-Project 3: Streaming Pipeline
-Project 4: Airflow Orchestration
-Project 5: Cloud Data Platform
+Project 1 — Batch ETL Foundation
+Project 2 — API Serving Layer
+Project 3 — Kafka Streaming Pipeline
+Project 4 — Airflow Orchestration
+Project 5 — Cloud Data Platform
 ```
 
-Project 4 can orchestrate this Project 1 pipeline by triggering:
+Project 1 provides trusted Silver datasets and Gold analytics marts for:
 
-```bash
-python scripts/pipeline/run_pipeline.py
-```
+* Project 2 API responses
+* Project 4 Airflow orchestration
+* Project 5 S3 and Athena publishing
+* Power BI dashboards
+* Future browser-based analytics applications
 
 ---
 
-## 💡 Key Takeaway
+## 🛣️ Planned Development
 
-Raw data is not ready for analytics by default.
+* Power BI dashboard integration
+* Web analytics application
+* Cloud-backed input and output paths
+* Additional data quality thresholds
+* Incremental processing strategy
+* Persistent execution history
+* Centralized pipeline observability
 
-This project demonstrates how a data engineer validates, transforms, tests, and prepares large-scale raw data into reliable analytics-ready outputs.
+---
+
+## 🎯 Key Takeaway
+
+This project is not only a CSV transformation script.
+
+It demonstrates how a production-style Batch ETL workflow can validate large raw datasets, preserve row-level traceability, generate analytics-ready marts, verify output quality, expose runtime metadata, and enforce automated quality checks.
 
 ```text
-Raw → Validated Silver → Analytics-ready Gold → Tested & CI-validated Pipeline
+Raw Data
+→ Validated Silver
+→ Analytics-ready Gold
+→ Runtime Metadata
+→ Trusted Downstream Consumption
 ```
