@@ -141,7 +141,7 @@ def transform_to_silver(
         raise FileNotFoundError(f"Raw data file not found: {input_file}")
 
     if output_file.exists():
-        output_file.unlink()
+        output_file.unlink(missing_ok=True)
 
     total_rows = 0
     total_chunks = 0

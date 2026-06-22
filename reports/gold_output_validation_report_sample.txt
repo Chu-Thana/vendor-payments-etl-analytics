@@ -1,0 +1,113 @@
+GOLD OUTPUT VALIDATION REPORT
+================================================================================
+
+Overall status: PASS
+
+mart_spending_by_fiscal_year
+--------------------------------------------------------------------------------
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold_sample\mart_spending_by_fiscal_year.csv
+Exists: True
+Status: PASS
+Row count: 20
+Column count: 10
+Missing required columns: None
+Metric null counts:
+  - total_vouchers_paid: 0
+  - total_vouchers_pending: 0
+  - total_encumbrance_balance: 0
+  - total_pending_retainage: 0
+  - record_count: 0
+Metric sums:
+  - total_vouchers_paid: 26,329,994,286.96
+  - total_vouchers_pending: 16,184,334.95
+  - total_encumbrance_balance: 5,466,566.62
+  - total_pending_retainage: 120,891,212.24
+  - record_count: 10,000.00
+
+mart_spending_by_department
+--------------------------------------------------------------------------------
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold_sample\mart_spending_by_department.csv
+Exists: True
+Status: PASS
+Row count: 818
+Column count: 12
+Missing required columns: None
+Metric null counts:
+  - total_vouchers_paid: 0
+  - total_vouchers_pending: 0
+  - total_encumbrance_balance: 0
+  - total_pending_retainage: 0
+  - record_count: 0
+Metric sums:
+  - total_vouchers_paid: 26,329,994,286.96
+  - total_vouchers_pending: 16,184,334.95
+  - total_encumbrance_balance: 5,466,566.62
+  - total_pending_retainage: 120,891,212.24
+  - record_count: 10,000.00
+
+mart_spending_by_supplier_top_n
+--------------------------------------------------------------------------------
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold_sample\mart_spending_by_supplier_top_n.csv
+Exists: True
+Status: PASS
+Row count: 100
+Column count: 10
+Missing required columns: None
+Metric null counts:
+  - total_vouchers_paid: 0
+  - total_vouchers_pending: 0
+  - total_encumbrance_balance: 0
+  - total_pending_retainage: 0
+  - record_count: 0
+Metric sums:
+  - total_vouchers_paid: 26,180,446,704.03
+  - total_vouchers_pending: 8,821,589.49
+  - total_encumbrance_balance: 2,376,005.54
+  - total_pending_retainage: 31,141,800.27
+  - record_count: 542.00
+
+mart_pending_by_department
+--------------------------------------------------------------------------------
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold_sample\mart_pending_by_department.csv
+Exists: True
+Status: PASS
+Row count: 240
+Column count: 11
+Missing required columns: None
+Metric null counts:
+  - total_vouchers_paid: 0
+  - total_vouchers_pending: 0
+  - total_encumbrance_balance: 0
+  - total_pending_retainage: 0
+  - record_count: 0
+Metric sums:
+  - total_vouchers_paid: 16,593,936,396.49
+  - total_vouchers_pending: 16,184,334.95
+  - total_encumbrance_balance: 2,294,370.78
+  - total_pending_retainage: 74,493,083.84
+  - record_count: 4,777.00
+
+mart_fund_category_summary
+--------------------------------------------------------------------------------
+Path: E:\dev\vendor-payments-etl-analytics\data\processed\gold_sample\mart_fund_category_summary.csv
+Exists: True
+Status: PASS
+Row count: 630
+Column count: 12
+Missing required columns: None
+Metric null counts:
+  - total_vouchers_paid: 0
+  - total_vouchers_pending: 0
+  - total_encumbrance_balance: 0
+  - total_pending_retainage: 0
+  - record_count: 0
+Metric sums:
+  - total_vouchers_paid: 26,329,994,286.96
+  - total_vouchers_pending: 16,184,334.95
+  - total_encumbrance_balance: 5,466,566.62
+  - total_pending_retainage: 120,891,212.24
+  - record_count: 10,000.00
+
+VALIDATION DECISION
+--------------------------------------------------------------------------------
+PASS: All gold mart files exist, contain rows, and include required columns.
