@@ -28,6 +28,13 @@ from src.keys import add_source_row_hash, add_business_composite_key
 
 SILVER_OUTPUT_FILE = SILVER_DATA_DIR / "vendor_payments_silver.csv"
 
+SILVER_OUTPUT_FILE = (
+    SILVER_DATA_DIR / "vendor_payments_silver.csv"
+)
+
+SILVER_CANDIDATE_FILE = (
+    SILVER_DATA_DIR / "vendor_payments_silver.candidate.csv"
+)
 
 LOW_RISK_FILL_UNKNOWN_COLUMNS = [
     "Department",
@@ -135,13 +142,18 @@ def transform_to_silver(
     ensure_directories()
 
     input_file = input_file or RAW_DATA_FILE
-    output_file = output_file or SILVER_OUTPUT_FILE
+
+    # output_file ใน stage นี้หมายถึง candidate output
+    output_file = output_file or SILVER_CANDIDATE_FILE
 
     if not input_file.exists():
-        raise FileNotFoundError(f"Raw data file not found: {input_file}")
+        raise FileNotFoundError(
+            f"Raw data file not found: {input_file}"
+        )
 
-    if output_file.exists():
-        output_file.unlink(missing_ok=True)
+    # ลบเฉพาะ candidate เก่าที่อาจค้างจากรอบก่อน
+    # ห้ามแตะ validated final Silver
+    output_file.unlink(missing_ok=True)
 
     total_rows = 0
     total_chunks = 0
@@ -153,6 +165,7 @@ def transform_to_silver(
         low_memory=False,
     ):
         total_chunks += 1
+
         silver_chunk = transform_chunk(chunk)
         total_rows += len(silver_chunk)
 
@@ -164,11 +177,25 @@ def transform_to_silver(
             encoding="utf-8",
         )
 
-        print(f"Processed chunk {total_chunks}: {total_rows:,} rows total")
+        print(
+            f"Processed chunk {total_chunks}: "
+            f"{total_rows:,} rows total"
+        )
+
+    if total_rows == 0:
+        output_file.unlink(missing_ok=True)
+        raise ValueError(
+            "Silver transformation produced zero rows."
+        )
+
+    if not output_file.exists():
+        raise RuntimeError(
+            f"Silver candidate was not created: {output_file}"
+        )
 
     print("Silver transformation completed.")
     print(f"Total rows processed: {total_rows:,}")
-    print(f"Output file: {output_file}")
+    print(f"Candidate file: {output_file}")
 
     return {
         "source_rows": total_rows,

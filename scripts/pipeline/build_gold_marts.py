@@ -17,20 +17,33 @@ from src.config import (
 
 SILVER_FILE = SILVER_DATA_DIR / "vendor_payments_silver.csv"
 
+GOLD_CANDIDATE_DIR = (
+    GOLD_DATA_DIR.parent / "gold_candidate"
+)
+
 MART_FISCAL_YEAR = (
-    GOLD_DATA_DIR / "mart_spending_by_fiscal_year.csv"
+    GOLD_CANDIDATE_DIR
+    / "mart_spending_by_fiscal_year.csv"
 )
+
 MART_DEPARTMENT = (
-    GOLD_DATA_DIR / "mart_spending_by_department.csv"
+    GOLD_CANDIDATE_DIR
+    / "mart_spending_by_department.csv"
 )
+
 MART_SUPPLIER_TOP_N = (
-    GOLD_DATA_DIR / "mart_spending_by_supplier_top_n.csv"
+    GOLD_CANDIDATE_DIR
+    / "mart_spending_by_supplier_top_n.csv"
 )
+
 MART_PENDING_DEPARTMENT = (
-    GOLD_DATA_DIR / "mart_pending_by_department.csv"
+    GOLD_CANDIDATE_DIR
+    / "mart_pending_by_department.csv"
 )
+
 MART_FUND_CATEGORY = (
-    GOLD_DATA_DIR / "mart_fund_category_summary.csv"
+    GOLD_CANDIDATE_DIR
+    / "mart_fund_category_summary.csv"
 )
 
 
@@ -39,10 +52,20 @@ def aggregate_by_group(
     silver_file: Path = SILVER_FILE,
 ) -> pd.DataFrame:
     """
-    Aggregate silver data by selected group columns
-    using chunk processing.
+    Aggregate Silver data using chunk processing.
+
+    Additive metrics are partially aggregated per chunk.
+    unique_suppliers is calculated separately using an exact
+    distinct group + supplier combination across all chunks.
     """
-    result_parts = []
+    metric_parts = []
+    supplier_parts = []
+
+    supplier_columns = list(
+        dict.fromkeys(
+            group_cols + ["supplier_name"]
+        )
+    )
 
     for chunk in pd.read_csv(
         silver_file,
@@ -51,7 +74,10 @@ def aggregate_by_group(
         low_memory=False,
     ):
         grouped = (
-            chunk.groupby(group_cols, dropna=False)
+            chunk.groupby(
+                group_cols,
+                dropna=False,
+            )
             .agg(
                 total_vouchers_paid=(
                     "vouchers_paid",
@@ -73,10 +99,6 @@ def aggregate_by_group(
                     "source_row_hash",
                     "count",
                 ),
-                unique_suppliers=(
-                    "supplier_name",
-                    "nunique",
-                ),
                 negative_paid_records=(
                     "is_negative_paid",
                     "sum",
@@ -93,15 +115,29 @@ def aggregate_by_group(
             .reset_index()
         )
 
-        result_parts.append(grouped)
+        metric_parts.append(grouped)
 
-    combined = pd.concat(
-        result_parts,
+        supplier_distinct = (
+            chunk[supplier_columns]
+            .drop_duplicates()
+        )
+
+        supplier_parts.append(
+            supplier_distinct
+        )
+
+    if not metric_parts:
+        raise ValueError(
+            "Silver input contains no rows."
+        )
+
+    combined_metrics = pd.concat(
+        metric_parts,
         ignore_index=True,
     )
 
-    return (
-        combined.groupby(
+    final_metrics = (
+        combined_metrics.groupby(
             group_cols,
             dropna=False,
         )
@@ -126,10 +162,6 @@ def aggregate_by_group(
                 "record_count",
                 "sum",
             ),
-            unique_suppliers=(
-                "unique_suppliers",
-                "sum",
-            ),
             negative_paid_records=(
                 "negative_paid_records",
                 "sum",
@@ -144,6 +176,33 @@ def aggregate_by_group(
             ),
         )
         .reset_index()
+    )
+
+    distinct_suppliers = (
+        pd.concat(
+            supplier_parts,
+            ignore_index=True,
+        )
+        .drop_duplicates(
+            subset=supplier_columns
+        )
+    )
+
+    unique_suppliers = (
+        distinct_suppliers.groupby(
+            group_cols,
+            dropna=False,
+        )
+        .size()
+        .reset_index(
+            name="unique_suppliers"
+        )
+    )
+
+    return final_metrics.merge(
+        unique_suppliers,
+        on=group_cols,
+        how="left",
     )
 
 
@@ -298,7 +357,7 @@ def build_fund_category_mart(
 
 def build_gold_marts(
     silver_file: Path = SILVER_FILE,
-    gold_dir: Path = GOLD_DATA_DIR,
+    gold_dir: Path = GOLD_CANDIDATE_DIR,
 ) -> dict:
     ensure_directories()
 
@@ -311,6 +370,19 @@ def build_gold_marts(
         parents=True,
         exist_ok=True,
     )
+
+    expected_files = [
+        "mart_spending_by_fiscal_year.csv",
+        "mart_spending_by_department.csv",
+        "mart_spending_by_supplier_top_n.csv",
+        "mart_pending_by_department.csv",
+        "mart_fund_category_summary.csv",
+    ]
+
+    for file_name in expected_files:
+        (
+            gold_dir / file_name
+        ).unlink(missing_ok=True)
 
     mart_results = [
         build_fiscal_year_mart(
@@ -350,11 +422,19 @@ def build_gold_marts(
         ),
     ]
 
-    print("Gold mart build completed.")
+    print("Gold candidate build completed.")
 
     return {
         "mart_count": len(mart_results),
         "marts": mart_results,
+        "candidate_dir": str(gold_dir),
+        "available": all(
+            (
+                    gold_dir
+                    / file_name
+            ).exists()
+            for file_name in expected_files
+        ),
     }
 
 

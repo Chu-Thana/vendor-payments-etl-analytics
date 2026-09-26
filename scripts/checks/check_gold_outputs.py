@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 import sys
 
 import pandas as pd
@@ -10,58 +11,19 @@ sys.path.append(str(PROJECT_ROOT))
 from src.config import GOLD_DATA_DIR
 
 
-REPORT_PATH = PROJECT_ROOT / "reports" / "gold_output_validation_report.txt"
+GOLD_CANDIDATE_DIR = (
+    GOLD_DATA_DIR.parent / "gold_candidate"
+)
 
+GOLD_BACKUP_DIR = (
+    GOLD_DATA_DIR.parent / "gold_previous"
+)
 
-GOLD_FILES = {
-    "mart_spending_by_fiscal_year": {
-        "path": GOLD_DATA_DIR / "mart_spending_by_fiscal_year.csv",
-        "required_columns": [
-            "fiscal_year",
-            "total_vouchers_paid",
-            "total_vouchers_pending",
-            "record_count",
-        ],
-    },
-    "mart_spending_by_department": {
-        "path": GOLD_DATA_DIR / "mart_spending_by_department.csv",
-        "required_columns": [
-            "fiscal_year",
-            "organization_group",
-            "department",
-            "total_vouchers_paid",
-            "record_count",
-        ],
-    },
-    "mart_spending_by_supplier_top_n": {
-        "path": GOLD_DATA_DIR / "mart_spending_by_supplier_top_n.csv",
-        "required_columns": [
-            "supplier_name",
-            "total_vouchers_paid",
-            "record_count",
-        ],
-    },
-    "mart_pending_by_department": {
-        "path": GOLD_DATA_DIR / "mart_pending_by_department.csv",
-        "required_columns": [
-            "fiscal_year",
-            "department",
-            "total_vouchers_pending",
-            "record_count",
-        ],
-    },
-    "mart_fund_category_summary": {
-        "path": GOLD_DATA_DIR / "mart_fund_category_summary.csv",
-        "required_columns": [
-            "fiscal_year",
-            "fund_type",
-            "fund_category",
-            "total_vouchers_paid",
-            "record_count",
-        ],
-    },
-}
-
+REPORT_PATH = (
+    PROJECT_ROOT
+    / "reports"
+    / "gold_output_validation_report.txt"
+)
 
 METRIC_COLUMNS = [
     "total_vouchers_paid",
@@ -70,6 +32,51 @@ METRIC_COLUMNS = [
     "total_pending_retainage",
     "record_count",
 ]
+
+
+def publish_gold_candidate(
+    candidate_dir: Path = GOLD_CANDIDATE_DIR,
+    final_dir: Path = GOLD_DATA_DIR,
+    backup_dir: Path = GOLD_BACKUP_DIR,
+) -> None:
+    if not candidate_dir.exists():
+        raise FileNotFoundError(
+            f"Gold candidate directory not found: "
+            f"{candidate_dir}"
+        )
+
+    backup_dir.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    if backup_dir.exists():
+        shutil.rmtree(backup_dir)
+
+    final_was_moved = False
+
+    try:
+        if final_dir.exists():
+            final_dir.replace(backup_dir)
+            final_was_moved = True
+
+        candidate_dir.replace(final_dir)
+
+    except Exception:
+        # Candidate publish failed.
+        # Restore previously validated Gold if possible.
+        if (
+            final_was_moved
+            and backup_dir.exists()
+            and not final_dir.exists()
+        ):
+            backup_dir.replace(final_dir)
+
+        raise
+
+    # New Gold set has been published successfully.
+    if backup_dir.exists():
+        shutil.rmtree(backup_dir)
 
 
 def build_gold_file_configs(gold_dir: Path) -> dict:
@@ -168,7 +175,7 @@ def validate_gold_file(name: str, config: dict) -> dict:
 
 
 def check_gold_outputs(
-    gold_dir: Path = GOLD_DATA_DIR,
+    gold_dir: Path = GOLD_CANDIDATE_DIR,
     report_path: Path = REPORT_PATH,
 ) -> dict:
     gold_files = build_gold_file_configs(gold_dir)
