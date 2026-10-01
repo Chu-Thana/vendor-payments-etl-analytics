@@ -21,6 +21,83 @@ GOLD_CANDIDATE_DIR = (
     GOLD_DATA_DIR.parent / "gold_candidate"
 )
 
+GOLD_PARTIAL_DIR = (
+    GOLD_DATA_DIR.parent / "gold_partial"
+)
+
+
+MART_SPECS = {
+    "mart_spending_by_fiscal_year": {
+        "group_cols": [
+            "fiscal_year",
+        ],
+        "sort_columns": [
+            "fiscal_year",
+        ],
+        "ascending": True,
+        "top_n": None,
+        "nonzero_filter_column": None,
+    },
+
+    "mart_spending_by_department": {
+        "group_cols": [
+            "fiscal_year",
+            "organization_group",
+            "department",
+        ],
+        "sort_columns": [
+            "fiscal_year",
+            "total_vouchers_paid",
+        ],
+        "ascending": [True, False],
+        "top_n": None,
+        "nonzero_filter_column": None,
+    },
+
+    "mart_spending_by_supplier_top_n": {
+        "group_cols": [
+            "supplier_name",
+        ],
+        "sort_columns": [
+            "total_vouchers_paid",
+        ],
+        "ascending": False,
+        "top_n": 100,
+        "nonzero_filter_column": None,
+    },
+
+    "mart_pending_by_department": {
+        "group_cols": [
+            "fiscal_year",
+            "department",
+        ],
+        "sort_columns": [
+            "fiscal_year",
+            "total_vouchers_pending",
+        ],
+        "ascending": [True, False],
+        "top_n": None,
+        "nonzero_filter_column": (
+            "total_vouchers_pending"
+        ),
+    },
+
+    "mart_fund_category_summary": {
+        "group_cols": [
+            "fiscal_year",
+            "fund_type",
+            "fund_category",
+        ],
+        "sort_columns": [
+            "fiscal_year",
+            "total_vouchers_paid",
+        ],
+        "ascending": [True, False],
+        "top_n": None,
+        "nonzero_filter_column": None,
+    },
+}
+
 MART_FISCAL_YEAR = (
     GOLD_CANDIDATE_DIR
     / "mart_spending_by_fiscal_year.csv"
@@ -45,6 +122,357 @@ MART_FUND_CATEGORY = (
     GOLD_CANDIDATE_DIR
     / "mart_fund_category_summary.csv"
 )
+
+
+def aggregate_chunk_metrics(
+    chunk: pd.DataFrame,
+    group_cols: list[str],
+) -> pd.DataFrame:
+    return (
+        chunk.groupby(
+            group_cols,
+            dropna=False,
+        )
+        .agg(
+            total_vouchers_paid=(
+                "vouchers_paid",
+                "sum",
+            ),
+            total_vouchers_pending=(
+                "vouchers_pending",
+                "sum",
+            ),
+            total_encumbrance_balance=(
+                "encumbrance_balance",
+                "sum",
+            ),
+            total_pending_retainage=(
+                "vouchers_pending_retainage",
+                "sum",
+            ),
+            record_count=(
+                "source_row_hash",
+                "count",
+            ),
+            negative_paid_records=(
+                "is_negative_paid",
+                "sum",
+            ),
+            large_paid_1m_records=(
+                "is_large_paid_1m",
+                "sum",
+            ),
+            missing_po_date_records=(
+                "is_missing_purchase_order_date",
+                "sum",
+            ),
+        )
+        .reset_index()
+    )
+
+
+def build_chunk_supplier_state(
+    chunk: pd.DataFrame,
+    group_cols: list[str],
+) -> pd.DataFrame:
+    supplier_columns = list(
+        dict.fromkeys(
+            group_cols
+            + ["supplier_name"]
+        )
+    )
+
+    return (
+        chunk[
+            supplier_columns
+        ]
+        .drop_duplicates()
+    )
+
+def write_gold_partial_bundle(
+    silver_chunk: pd.DataFrame,
+    chunk_index: int,
+) -> Path:
+    chunk_id = f"chunk_{chunk_index:03d}"
+
+    chunk_dir = (
+        GOLD_PARTIAL_DIR
+        / chunk_id
+    )
+
+    chunk_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    for mart_name, spec in MART_SPECS.items():
+        group_cols = spec[
+            "group_cols"
+        ]
+
+        metrics = aggregate_chunk_metrics(
+            silver_chunk,
+            group_cols,
+        )
+
+        suppliers = build_chunk_supplier_state(
+            silver_chunk,
+            group_cols,
+        )
+
+        metrics.to_csv(
+            chunk_dir
+            / f"{mart_name}.metrics.csv",
+            index=False,
+            encoding="utf-8",
+        )
+
+        suppliers.to_csv(
+            chunk_dir
+            / f"{mart_name}.suppliers.csv",
+            index=False,
+            encoding="utf-8",
+        )
+
+    return chunk_dir
+
+
+def build_gold_partials(
+    silver_file: Path = SILVER_FILE,
+) -> dict:
+    if not silver_file.exists():
+        raise FileNotFoundError(
+            f"Silver file not found: {silver_file}"
+        )
+
+    total_rows = 0
+    total_chunks = 0
+
+    for chunk_index, chunk in enumerate(
+        pd.read_csv(
+            silver_file,
+            chunksize=CHUNK_SIZE,
+            encoding="utf-8",
+            low_memory=False,
+        ),
+        start=1,
+    ):
+        write_gold_partial_bundle(
+            chunk,
+            chunk_index,
+        )
+
+        total_rows += len(chunk)
+        total_chunks += 1
+
+        print(
+            f"Created Gold partial "
+            f"chunk_{chunk_index:03d}: "
+            f"{len(chunk):,} source rows"
+        )
+
+    if total_rows == 0:
+        raise ValueError(
+            "Silver input contains no rows."
+        )
+
+    return {
+        "source_rows": total_rows,
+        "chunk_count": total_chunks,
+    }
+
+
+def merge_gold_partial_state(
+    mart_name: str,
+    group_cols: list[str],
+) -> pd.DataFrame:
+    metric_files = sorted(
+        GOLD_PARTIAL_DIR.glob(
+            f"chunk_*/"
+            f"{mart_name}.metrics.csv"
+        )
+    )
+
+    supplier_files = sorted(
+        GOLD_PARTIAL_DIR.glob(
+            f"chunk_*/"
+            f"{mart_name}.suppliers.csv"
+        )
+    )
+
+    if not metric_files:
+        raise RuntimeError(
+            f"No Gold metric partial files "
+            f"found for {mart_name}."
+        )
+
+    if not supplier_files:
+        raise RuntimeError(
+            f"No Gold supplier partial files "
+            f"found for {mart_name}."
+        )
+
+    metric_parts = [
+        pd.read_csv(
+            file,
+            encoding="utf-8",
+            low_memory=False,
+        )
+        for file in metric_files
+    ]
+
+    supplier_parts = [
+        pd.read_csv(
+            file,
+            encoding="utf-8",
+            low_memory=False,
+        )
+        for file in supplier_files
+    ]
+
+    combined_metrics = pd.concat(
+        metric_parts,
+        ignore_index=True,
+    )
+
+    final_metrics = (
+        combined_metrics.groupby(
+            group_cols,
+            dropna=False,
+        )
+        .agg(
+            total_vouchers_paid=(
+                "total_vouchers_paid",
+                "sum",
+            ),
+            total_vouchers_pending=(
+                "total_vouchers_pending",
+                "sum",
+            ),
+            total_encumbrance_balance=(
+                "total_encumbrance_balance",
+                "sum",
+            ),
+            total_pending_retainage=(
+                "total_pending_retainage",
+                "sum",
+            ),
+            record_count=(
+                "record_count",
+                "sum",
+            ),
+            negative_paid_records=(
+                "negative_paid_records",
+                "sum",
+            ),
+            large_paid_1m_records=(
+                "large_paid_1m_records",
+                "sum",
+            ),
+            missing_po_date_records=(
+                "missing_po_date_records",
+                "sum",
+            ),
+        )
+        .reset_index()
+    )
+
+    supplier_columns = list(
+        dict.fromkeys(
+            group_cols
+            + ["supplier_name"]
+        )
+    )
+
+    distinct_suppliers = (
+        pd.concat(
+            supplier_parts,
+            ignore_index=True,
+        )
+        .drop_duplicates(
+            subset=supplier_columns
+        )
+    )
+
+    unique_suppliers = (
+        distinct_suppliers.groupby(
+            group_cols,
+            dropna=False,
+        )
+        .size()
+        .reset_index(
+            name="unique_suppliers"
+        )
+    )
+
+    return final_metrics.merge(
+        unique_suppliers,
+        on=group_cols,
+        how="left",
+    )
+
+
+def finalize_gold_mart(
+    *,
+    mart_name: str,
+    output_file: Path,
+) -> dict:
+    spec = MART_SPECS[
+        mart_name
+    ]
+
+    mart = merge_gold_partial_state(
+        mart_name=mart_name,
+        group_cols=spec["group_cols"],
+    )
+
+    nonzero_filter_column = spec[
+        "nonzero_filter_column"
+    ]
+
+    if nonzero_filter_column is not None:
+        mart = mart[
+            mart[nonzero_filter_column] != 0
+            ]
+
+    sort_columns = spec[
+        "sort_columns"
+    ]
+
+    if sort_columns:
+        mart = mart.sort_values(
+            sort_columns,
+            ascending=spec["ascending"],
+        )
+
+    top_n = spec["top_n"]
+
+    if top_n is not None:
+        mart = mart.head(
+            top_n
+        )
+
+    output_file.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    mart.to_csv(
+        output_file,
+        index=False,
+        encoding="utf-8",
+    )
+
+    print(
+        f"Created: {output_file}"
+    )
+
+    return {
+        "name": mart_name,
+        "row_count": len(mart),
+        "output_file": str(output_file),
+        "available": output_file.exists(),
+    }
 
 
 def aggregate_by_group(
@@ -355,6 +783,23 @@ def build_fund_category_mart(
     )
 
 
+def clear_gold_partial_dir() -> None:
+    if not GOLD_PARTIAL_DIR.exists():
+        return
+
+    for chunk_dir in GOLD_PARTIAL_DIR.glob(
+        "chunk_*"
+    ):
+        if not chunk_dir.is_dir():
+            continue
+
+        for file in chunk_dir.iterdir():
+            if file.is_file():
+                file.unlink()
+
+        chunk_dir.rmdir()
+
+
 def build_gold_marts(
     silver_file: Path = SILVER_FILE,
     gold_dir: Path = GOLD_CANDIDATE_DIR,
@@ -382,39 +827,54 @@ def build_gold_marts(
     for file_name in expected_files:
         (
             gold_dir / file_name
-        ).unlink(missing_ok=True)
+        ).unlink(
+            missing_ok=True
+        )
+
+    # Phase 1:
+    # Rebuild Gold partial checkpoints from scratch.
+    # Recovery-aware resume will be added later.
+    clear_gold_partial_dir()
+
+    partial_result = build_gold_partials(
+        silver_file=silver_file
+    )
 
     mart_results = [
-        build_fiscal_year_mart(
-            silver_file=silver_file,
+        finalize_gold_mart(
+            mart_name="mart_spending_by_fiscal_year",
             output_file=(
                 gold_dir
                 / "mart_spending_by_fiscal_year.csv"
             ),
         ),
-        build_department_mart(
-            silver_file=silver_file,
+
+        finalize_gold_mart(
+            mart_name="mart_spending_by_department",
             output_file=(
                 gold_dir
                 / "mart_spending_by_department.csv"
             ),
         ),
-        build_supplier_top_n_mart(
-            silver_file=silver_file,
+
+        finalize_gold_mart(
+            mart_name="mart_spending_by_supplier_top_n",
             output_file=(
                 gold_dir
                 / "mart_spending_by_supplier_top_n.csv"
             ),
         ),
-        build_pending_department_mart(
-            silver_file=silver_file,
+
+        finalize_gold_mart(
+            mart_name="mart_pending_by_department",
             output_file=(
                 gold_dir
                 / "mart_pending_by_department.csv"
             ),
         ),
-        build_fund_category_mart(
-            silver_file=silver_file,
+
+        finalize_gold_mart(
+            mart_name="mart_fund_category_summary",
             output_file=(
                 gold_dir
                 / "mart_fund_category_summary.csv"
@@ -422,16 +882,34 @@ def build_gold_marts(
         ),
     ]
 
-    print("Gold candidate build completed.")
+    print(
+        "Gold partial build completed: "
+        f"{partial_result['chunk_count']} chunks, "
+        f"{partial_result['source_rows']:,} source rows"
+    )
+
+    print(
+        "Gold candidate build completed."
+    )
 
     return {
-        "mart_count": len(mart_results),
+        "source_rows": partial_result[
+            "source_rows"
+        ],
+        "chunk_count": partial_result[
+            "chunk_count"
+        ],
+        "mart_count": len(
+            mart_results
+        ),
         "marts": mart_results,
-        "candidate_dir": str(gold_dir),
+        "candidate_dir": str(
+            gold_dir
+        ),
         "available": all(
             (
-                    gold_dir
-                    / file_name
+                gold_dir
+                / file_name
             ).exists()
             for file_name in expected_files
         ),
