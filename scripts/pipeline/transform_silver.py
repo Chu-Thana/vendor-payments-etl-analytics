@@ -27,12 +27,13 @@ from src.cleaning import (
 from src.keys import add_source_row_hash, add_business_composite_key
 from src.recovery import (
     get_or_create_dataset_chunk,
-    get_dataset_chunk_status,
+    get_dataset_chunk_metadata,
+    get_chunk_completion_summary,
+    invalidate_dataset_chunk,
     recover_stale_running_chunk,
     start_chunk_attempt,
     finish_chunk_attempt,
 )
-
 
 SILVER_OUTPUT_FILE = SILVER_DATA_DIR / "vendor_payments_silver.csv"
 SILVER_CANDIDATE_FILE = (SILVER_DATA_DIR / "vendor_payments_silver.candidate.csv")
@@ -46,6 +47,21 @@ LOW_RISK_FILL_UNKNOWN_COLUMNS = [
     "Fund Category",
     "Purchasing Authority Description",
 ]
+
+
+def count_csv_rows(
+    file_path: Path,
+) -> int:
+    row_count = 0
+
+    for chunk in pd.read_csv(
+        file_path,
+        chunksize=100000,
+        low_memory=False,
+    ):
+        row_count += len(chunk)
+
+    return row_count
 
 
 def validate_silver_chunk(
@@ -384,29 +400,58 @@ def transform_to_silver(
             chunk_index
         )
 
-        chunk_status = get_dataset_chunk_status(
+        chunk_metadata = get_dataset_chunk_metadata(
             dataset_chunk_id
         )
+
+        chunk_status = chunk_metadata["status"]
 
         if (
                 chunk_status == "VALIDATED"
                 and chunk_file.exists()
         ):
-            chunk_rows = len(chunk)
-
-            total_rows += chunk_rows
-            total_chunks += 1
-
-            chunk_files.append(
+            actual_row_count = count_csv_rows(
                 chunk_file
             )
 
-            print(
-                f"Skipped {chunk_id}: "
-                "already VALIDATED"
+            actual_checksum = calculate_file_checksum(
+                chunk_file
             )
 
-            continue
+            expected_row_count = chunk_metadata[
+                "row_count"
+            ]
+
+            expected_checksum = chunk_metadata[
+                "checksum"
+            ]
+
+            if (
+                    actual_row_count == expected_row_count
+                    and actual_checksum == expected_checksum
+            ):
+                total_rows += actual_row_count
+                total_chunks += 1
+
+                chunk_files.append(
+                    chunk_file
+                )
+
+                print(
+                    f"Skipped {chunk_id}: "
+                    "VALIDATED and file metadata matched"
+                )
+
+                continue
+
+            print(
+                f"Reprocessing {chunk_id}: "
+                "VALIDATED metadata does not match file"
+            )
+
+            invalidate_dataset_chunk(
+                dataset_chunk_id
+            )
 
         if (
                 fail_before_chunk is not None
@@ -514,6 +559,37 @@ def transform_to_silver(
         raise ValueError(
             "Silver transformation produced zero rows."
         )
+
+    chunk_summary = get_chunk_completion_summary(
+        dataset_version_id
+    )
+
+    if (
+            chunk_summary["total_chunks"] != total_chunks
+            or chunk_summary["validated_chunks"] != total_chunks
+            or chunk_summary["failed_chunks"] != 0
+            or chunk_summary["processing_chunks"] != 0
+            or chunk_summary["created_chunks"] != 0
+            or chunk_summary["min_chunk_index"] != 1
+            or chunk_summary["max_chunk_index"] != total_chunks
+    ):
+        raise RuntimeError(
+            "Silver chunk completeness gate failed: "
+            f"expected_chunks={total_chunks}, "
+            f"registered_chunks={chunk_summary['total_chunks']}, "
+            f"validated_chunks={chunk_summary['validated_chunks']}, "
+            f"failed_chunks={chunk_summary['failed_chunks']}, "
+            f"processing_chunks={chunk_summary['processing_chunks']}, "
+            f"created_chunks={chunk_summary['created_chunks']}, "
+            f"min_chunk_index={chunk_summary['min_chunk_index']}, "
+            f"max_chunk_index={chunk_summary['max_chunk_index']}"
+        )
+
+    print(
+        "Silver chunk completeness gate passed: "
+        f"{chunk_summary['validated_chunks']}/"
+        f"{total_chunks} chunks VALIDATED"
+    )
 
     missing_chunk_files = [
         chunk_file
