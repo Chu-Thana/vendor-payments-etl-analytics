@@ -48,6 +48,83 @@ LOW_RISK_FILL_UNKNOWN_COLUMNS = [
 ]
 
 
+def validate_silver_chunk(
+    silver_chunk: pd.DataFrame,
+    expected_input_rows: int,
+) -> dict:
+    errors: list[str] = []
+
+    actual_rows = len(silver_chunk)
+
+    if actual_rows != expected_input_rows:
+        errors.append(
+            "Silver chunk row count does not match input chunk row count."
+        )
+
+    required_columns = [
+        "source_row_hash",
+        "business_composite_key",
+        "fiscal_year",
+        "department",
+        "supplier_name",
+        "vouchers_paid",
+        "purchase_order_date",
+        "po_year",
+        "po_month",
+    ]
+
+    missing_columns = [
+        column
+        for column in required_columns
+        if column not in silver_chunk.columns
+    ]
+
+    if missing_columns:
+        errors.append(
+            "Missing required Silver columns: "
+            + ", ".join(missing_columns)
+        )
+
+    null_source_hashes = 0
+
+    if "source_row_hash" in silver_chunk.columns:
+        null_source_hashes = int(
+            silver_chunk["source_row_hash"]
+            .isna()
+            .sum()
+        )
+
+        if null_source_hashes > 0:
+            errors.append(
+                f"source_row_hash contains "
+                f"{null_source_hashes:,} null values."
+            )
+
+    duplicate_source_hashes = 0
+
+    if "source_row_hash" in silver_chunk.columns:
+        duplicate_source_hashes = int(
+            silver_chunk["source_row_hash"]
+            .duplicated()
+            .sum()
+        )
+
+    status = (
+        "FAIL"
+        if errors
+        else "PASS"
+    )
+
+    return {
+        "status": status,
+        "row_count": actual_rows,
+        "expected_input_rows": expected_input_rows,
+        "null_source_hashes": null_source_hashes,
+        "duplicate_source_hashes": duplicate_source_hashes,
+        "errors": errors,
+    }
+
+
 def calculate_file_checksum(
     file_path: Path,
 ) -> str:
@@ -371,6 +448,25 @@ def transform_to_silver(
                 chunk
             )
 
+            validation_result = (
+                validate_silver_chunk(
+                    silver_chunk,
+                    expected_input_rows=len(chunk),
+                )
+            )
+
+            if (
+                    validation_result["status"]
+                    == "FAIL"
+            ):
+                raise RuntimeError(
+                    "Chunk validation failed for "
+                    f"{chunk_id}: "
+                    + "; ".join(
+                        validation_result["errors"]
+                    )
+                )
+
             chunk_file = write_silver_chunk(
                 silver_chunk,
                 chunk_index,
@@ -401,7 +497,8 @@ def transform_to_silver(
 
             print(
                 f"Processed {chunk_id}: "
-                f"{chunk_row_count:,} rows"
+                f"{chunk_row_count:,} rows "
+                f"[validation={validation_result['status']}]"
             )
 
         except Exception as exc:
