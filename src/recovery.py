@@ -1,8 +1,40 @@
 from __future__ import annotations
+from datetime import datetime, timedelta, timezone
 
 import os
-
 import psycopg2
+
+
+def recover_stale_running_chunk(
+    dataset_chunk_id: int,
+    stale_after_seconds: int = 900,
+) -> int | None:
+    stale_before = (
+        datetime.now(timezone.utc)
+        - timedelta(seconds=stale_after_seconds)
+    )
+
+    with get_recovery_connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT recovery.recover_stale_chunk_attempt(
+                    %s,
+                    %s
+                );
+                """,
+                (
+                    dataset_chunk_id,
+                    stale_before,
+                ),
+            )
+
+            row = cursor.fetchone()
+
+    if row is None or row[0] is None:
+        return None
+
+    return int(row[0])
 
 
 def get_recovery_connection():

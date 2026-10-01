@@ -28,6 +28,7 @@ from src.keys import add_source_row_hash, add_business_composite_key
 from src.recovery import (
     get_or_create_dataset_chunk,
     get_dataset_chunk_status,
+    recover_stale_running_chunk,
     start_chunk_attempt,
     finish_chunk_attempt,
 )
@@ -336,6 +337,27 @@ def transform_to_silver(
         ):
             raise RuntimeError(
                 f"Controlled failure before chunk_{chunk_index:03d}"
+            )
+
+        stale_after_seconds = int(
+            os.getenv(
+                "CHUNK_STALE_AFTER_SECONDS",
+                "900",
+            )
+        )
+
+        recovered_execution_id = (
+            recover_stale_running_chunk(
+                dataset_chunk_id,
+                stale_after_seconds=stale_after_seconds,
+            )
+        )
+
+        if recovered_execution_id is not None:
+            print(
+                f"Recovered stale RUNNING attempt "
+                f"for {chunk_id}: "
+                f"execution_id={recovered_execution_id}"
             )
 
         chunk_execution_id = (
