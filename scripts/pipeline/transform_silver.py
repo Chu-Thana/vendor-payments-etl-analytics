@@ -2,7 +2,8 @@ from pathlib import Path
 import sys
 
 import pandas as pd
-
+import hashlib
+import os
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
@@ -24,17 +25,17 @@ from src.cleaning import (
     clean_contract_number,
 )
 from src.keys import add_source_row_hash, add_business_composite_key
+from src.recovery import (
+    get_or_create_dataset_chunk,
+    get_dataset_chunk_status,
+    start_chunk_attempt,
+    finish_chunk_attempt,
+)
 
 
 SILVER_OUTPUT_FILE = SILVER_DATA_DIR / "vendor_payments_silver.csv"
-
-SILVER_OUTPUT_FILE = (
-    SILVER_DATA_DIR / "vendor_payments_silver.csv"
-)
-
-SILVER_CANDIDATE_FILE = (
-    SILVER_DATA_DIR / "vendor_payments_silver.candidate.csv"
-)
+SILVER_CANDIDATE_FILE = (SILVER_DATA_DIR / "vendor_payments_silver.candidate.csv")
+SILVER_CHUNK_DIR = SILVER_DATA_DIR / "chunks"
 
 LOW_RISK_FILL_UNKNOWN_COLUMNS = [
     "Department",
@@ -44,6 +45,94 @@ LOW_RISK_FILL_UNKNOWN_COLUMNS = [
     "Fund Category",
     "Purchasing Authority Description",
 ]
+
+
+def calculate_file_checksum(
+    file_path: Path,
+) -> str:
+    checksum = hashlib.sha256()
+
+    with file_path.open("rb") as file:
+        for chunk in iter(
+            lambda: file.read(1024 * 1024),
+            b"",
+        ):
+            checksum.update(chunk)
+
+    return checksum.hexdigest()
+
+
+def get_silver_chunk_file(chunk_index: int) -> Path:
+    return SILVER_CHUNK_DIR / f"chunk_{chunk_index:03d}.csv"
+
+
+def write_silver_chunk(
+    silver_chunk: pd.DataFrame,
+    chunk_index: int,
+) -> Path:
+    SILVER_CHUNK_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    chunk_file = get_silver_chunk_file(
+        chunk_index
+    )
+
+    temp_file = chunk_file.with_suffix(
+        ".candidate.csv"
+    )
+
+    temp_file.unlink(
+        missing_ok=True
+    )
+
+    silver_chunk.to_csv(
+        temp_file,
+        index=False,
+        encoding="utf-8",
+    )
+
+    temp_file.replace(
+        chunk_file
+    )
+
+    return chunk_file
+
+
+def assemble_silver_chunks(
+    chunk_files: list[Path],
+    output_file: Path,
+) -> int:
+    output_file.unlink(
+        missing_ok=True
+    )
+
+    total_rows = 0
+
+    for chunk_number, chunk_file in enumerate(
+        chunk_files,
+        start=1,
+    ):
+        chunk_df = pd.read_csv(
+            chunk_file,
+            encoding="utf-8",
+            low_memory=False,
+        )
+
+        total_rows += len(
+            chunk_df
+        )
+
+        chunk_df.to_csv(
+            output_file,
+            mode="a",
+            index=False,
+            header=chunk_number == 1,
+            encoding="utf-8",
+        )
+
+    return total_rows
 
 
 def add_quality_flags(df: pd.DataFrame) -> pd.DataFrame:
@@ -141,9 +230,21 @@ def transform_to_silver(
 ) -> dict:
     ensure_directories()
 
-    input_file = input_file or RAW_DATA_FILE
+    dataset_version_id_raw = os.getenv(
+        "RECOVERY_DATASET_VERSION_ID"
+    )
 
-    # output_file ใน stage นี้หมายถึง candidate output
+    if not dataset_version_id_raw:
+        raise RuntimeError(
+            "RECOVERY_DATASET_VERSION_ID is required "
+            "for chunk recovery."
+        )
+
+    dataset_version_id = int(
+        dataset_version_id_raw
+    )
+
+    input_file = input_file or RAW_DATA_FILE
     output_file = output_file or SILVER_CANDIDATE_FILE
 
     if not input_file.exists():
@@ -151,51 +252,191 @@ def transform_to_silver(
             f"Raw data file not found: {input_file}"
         )
 
-    # ลบเฉพาะ candidate เก่าที่อาจค้างจากรอบก่อน
-    # ห้ามแตะ validated final Silver
-    output_file.unlink(missing_ok=True)
+    SILVER_CHUNK_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    FAIL_BEFORE_CHUNK = os.getenv(
+        "FAIL_BEFORE_CHUNK"
+    )
+
+    fail_before_chunk = (
+        int(FAIL_BEFORE_CHUNK)
+        if FAIL_BEFORE_CHUNK
+        else None
+    )
 
     total_rows = 0
     total_chunks = 0
+    chunk_files: list[Path] = []
 
-    for chunk in pd.read_csv(
-        input_file,
-        chunksize=CHUNK_SIZE,
-        encoding="utf-8-sig",
-        low_memory=False,
+    for chunk_index, chunk in enumerate(
+            pd.read_csv(
+                input_file,
+                chunksize=CHUNK_SIZE,
+                encoding="utf-8-sig",
+                low_memory=False,
+            ),
+            start=1,
     ):
-        total_chunks += 1
+        chunk_id = f"chunk_{chunk_index:03d}"
 
-        silver_chunk = transform_chunk(chunk)
-        total_rows += len(silver_chunk)
+        source_start_row = (
+                                   (chunk_index - 1) * CHUNK_SIZE
+                           ) + 1
 
-        silver_chunk.to_csv(
-            output_file,
-            mode="a",
-            index=False,
-            header=not output_file.exists(),
-            encoding="utf-8",
+        source_end_row = (
+                source_start_row
+                + len(chunk)
+                - 1
         )
 
-        print(
-            f"Processed chunk {total_chunks}: "
-            f"{total_rows:,} rows total"
+        dataset_chunk_id = (
+            get_or_create_dataset_chunk(
+                dataset_version_id=dataset_version_id,
+                chunk_id=chunk_id,
+                chunk_index=chunk_index,
+                source_start_row=source_start_row,
+                source_end_row=source_end_row,
+            )
         )
+
+        chunk_file = get_silver_chunk_file(
+            chunk_index
+        )
+
+        chunk_status = get_dataset_chunk_status(
+            dataset_chunk_id
+        )
+
+        if (
+                chunk_status == "VALIDATED"
+                and chunk_file.exists()
+        ):
+            chunk_rows = len(chunk)
+
+            total_rows += chunk_rows
+            total_chunks += 1
+
+            chunk_files.append(
+                chunk_file
+            )
+
+            print(
+                f"Skipped {chunk_id}: "
+                "already VALIDATED"
+            )
+
+            continue
+
+        if (
+                fail_before_chunk is not None
+                and chunk_index == fail_before_chunk
+        ):
+            raise RuntimeError(
+                f"Controlled failure before chunk_{chunk_index:03d}"
+            )
+
+        chunk_execution_id = (
+            start_chunk_attempt(
+                dataset_chunk_id
+            )
+        )
+
+        try:
+            silver_chunk = transform_chunk(
+                chunk
+            )
+
+            chunk_file = write_silver_chunk(
+                silver_chunk,
+                chunk_index,
+            )
+
+            chunk_row_count = len(
+                silver_chunk
+            )
+
+            checksum = calculate_file_checksum(
+                chunk_file
+            )
+
+            finish_chunk_attempt(
+                chunk_execution_id=chunk_execution_id,
+                success=True,
+                row_count=chunk_row_count,
+                checksum=checksum,
+                error_message=None,
+            )
+
+            total_rows += chunk_row_count
+            total_chunks += 1
+
+            chunk_files.append(
+                chunk_file
+            )
+
+            print(
+                f"Processed {chunk_id}: "
+                f"{chunk_row_count:,} rows"
+            )
+
+        except Exception as exc:
+            finish_chunk_attempt(
+                chunk_execution_id=chunk_execution_id,
+                success=False,
+                error_message=str(exc),
+            )
+
+            raise
 
     if total_rows == 0:
-        output_file.unlink(missing_ok=True)
         raise ValueError(
             "Silver transformation produced zero rows."
         )
 
-    if not output_file.exists():
+    missing_chunk_files = [
+        chunk_file
+        for chunk_file in chunk_files
+        if not chunk_file.exists()
+    ]
+
+    if missing_chunk_files:
         raise RuntimeError(
-            f"Silver candidate was not created: {output_file}"
+            "Missing Silver chunk files: "
+            + ", ".join(
+                str(file)
+                for file in missing_chunk_files
+            )
         )
 
-    print("Silver transformation completed.")
-    print(f"Total rows processed: {total_rows:,}")
-    print(f"Candidate file: {output_file}")
+    assembled_rows = assemble_silver_chunks(
+        chunk_files,
+        output_file,
+    )
+
+    if assembled_rows != total_rows:
+        raise RuntimeError(
+            "Assembled Silver row count "
+            "does not match processed row count."
+        )
+
+    print(
+        "Silver transformation completed."
+    )
+
+    print(
+        f"Total rows processed: {total_rows:,}"
+    )
+
+    print(
+        f"Chunk count: {total_chunks}"
+    )
+
+    print(
+        f"Candidate file: {output_file}"
+    )
 
     return {
         "source_rows": total_rows,
