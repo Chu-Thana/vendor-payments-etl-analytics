@@ -18,10 +18,11 @@ from src.config import (
 
 from src.recovery import (
     finish_chunk_attempt,
+    get_dataset_chunk_metadata,
     get_or_create_dataset_chunk,
+    invalidate_dataset_chunk,
     start_chunk_attempt,
 )
-
 SILVER_FILE = SILVER_DATA_DIR / "vendor_payments_silver.csv"
 
 GOLD_CANDIDATE_DIR = (
@@ -592,6 +593,68 @@ def build_gold_partials(
             )
         )
 
+        chunk_dir = (
+                GOLD_PARTIAL_DIR
+                / chunk_id
+        )
+
+        chunk_metadata = (
+            get_dataset_chunk_metadata(
+                dataset_chunk_id
+            )
+        )
+
+        if (
+                chunk_metadata["status"]
+                == "VALIDATED"
+        ):
+            bundle_matches = False
+
+            if chunk_dir.exists():
+                try:
+                    validation = (
+                        validate_gold_partial_bundle(
+                            chunk_dir=chunk_dir,
+                            expected_chunk_id=chunk_id,
+                            expected_source_rows=len(chunk),
+                        )
+                    )
+
+                    bundle_matches = (
+                            chunk_metadata["row_count"]
+                            == len(chunk)
+                            and
+                            chunk_metadata["checksum"]
+                            == validation[
+                                "bundle_checksum"
+                            ]
+                    )
+
+                except Exception:
+                    bundle_matches = False
+
+            if bundle_matches:
+                total_rows += len(chunk)
+                total_chunks += 1
+
+                print(
+                    f"Skipped Gold partial "
+                    f"{chunk_id}: VALIDATED "
+                    f"and bundle metadata matched"
+                )
+
+                continue
+
+            print(
+                f"Reprocessing Gold partial "
+                f"{chunk_id}: VALIDATED "
+                f"metadata does not match bundle"
+            )
+
+            invalidate_dataset_chunk(
+                dataset_chunk_id
+            )
+            
         chunk_execution_id = (
             start_chunk_attempt(
                 dataset_chunk_id
