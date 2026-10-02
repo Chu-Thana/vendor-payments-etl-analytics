@@ -658,20 +658,6 @@ def build_gold_partials(
                 dataset_chunk_id
             )
 
-        fail_before_chunk = os.getenv(
-            "FAIL_BEFORE_CHUNK"
-        )
-
-        if (
-                fail_before_chunk
-                and int(fail_before_chunk)
-                == chunk_index
-        ):
-            raise RuntimeError(
-                "Controlled Gold failure before "
-                f"{chunk_id}"
-            )
-        
         stale_after_seconds = int(
             os.getenv(
                 "CHUNK_STALE_AFTER_SECONDS",
