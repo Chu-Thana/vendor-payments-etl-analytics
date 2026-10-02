@@ -2,7 +2,8 @@ from pathlib import Path
 import sys
 
 import pandas as pd
-
+import hashlib
+import json
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
@@ -25,6 +26,10 @@ GOLD_PARTIAL_DIR = (
     GOLD_DATA_DIR.parent / "gold_partial"
 )
 
+GOLD_PARTIAL_STATE_TYPES = [
+    "metrics",
+    "suppliers",
+]
 
 MART_SPECS = {
     "mart_spending_by_fiscal_year": {
@@ -122,6 +127,91 @@ MART_FUND_CATEGORY = (
     GOLD_CANDIDATE_DIR
     / "mart_fund_category_summary.csv"
 )
+
+
+def calculate_file_checksum(
+    file_path: Path,
+) -> str:
+    sha256 = hashlib.sha256()
+
+    with file_path.open("rb") as file:
+        for block in iter(
+            lambda: file.read(1024 * 1024),
+            b"",
+        ):
+            sha256.update(block)
+
+    return sha256.hexdigest()
+
+
+def build_gold_partial_manifest(
+    chunk_dir: Path,
+    chunk_id: str,
+    source_rows: int,
+) -> dict:
+    files = {}
+
+    for mart_name in MART_SPECS:
+        for state_type in GOLD_PARTIAL_STATE_TYPES:
+            file_name = (
+                f"{mart_name}."
+                f"{state_type}.csv"
+            )
+
+            file_path = (
+                chunk_dir
+                / file_name
+            )
+
+            if not file_path.exists():
+                raise FileNotFoundError(
+                    f"Gold partial file missing: "
+                    f"{file_path}"
+                )
+
+            row_count = sum(
+                len(chunk)
+                for chunk in pd.read_csv(
+                    file_path,
+                    chunksize=100_000,
+                    low_memory=False,
+                )
+            )
+
+            files[file_name] = {
+                "row_count": row_count,
+                "checksum": (
+                    calculate_file_checksum(
+                        file_path
+                    )
+                ),
+            }
+
+    return {
+        "chunk_id": chunk_id,
+        "source_rows": source_rows,
+        "files": files,
+    }
+
+
+def calculate_gold_bundle_checksum(
+    manifest: dict,
+) -> str:
+    payload = {
+        "chunk_id": manifest["chunk_id"],
+        "source_rows": manifest["source_rows"],
+        "files": manifest["files"],
+    }
+
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+    return hashlib.sha256(
+        canonical.encode("utf-8")
+    ).hexdigest()
 
 
 def aggregate_chunk_metrics(
@@ -234,7 +324,200 @@ def write_gold_partial_bundle(
             encoding="utf-8",
         )
 
+    manifest = build_gold_partial_manifest(
+        chunk_dir=chunk_dir,
+        chunk_id=chunk_id,
+        source_rows=len(silver_chunk),
+    )
+
+    manifest["bundle_checksum"] = (
+        calculate_gold_bundle_checksum(
+            manifest
+        )
+    )
+
+    manifest_file = (
+            chunk_dir
+            / "manifest.json"
+    )
+
+    with manifest_file.open(
+            "w",
+            encoding="utf-8",
+    ) as file:
+        json.dump(
+            manifest,
+            file,
+            indent=2,
+            sort_keys=True,
+        )
+
     return chunk_dir
+
+
+def validate_gold_partial_bundle(
+    chunk_dir: Path,
+    expected_chunk_id: str,
+    expected_source_rows: int,
+) -> dict:
+    manifest_file = (
+        chunk_dir
+        / "manifest.json"
+    )
+
+    if not manifest_file.exists():
+        raise FileNotFoundError(
+            f"Gold manifest missing: "
+            f"{manifest_file}"
+        )
+
+    with manifest_file.open(
+        "r",
+        encoding="utf-8",
+    ) as file:
+        manifest = json.load(file)
+
+    if manifest.get("chunk_id") != expected_chunk_id:
+        raise ValueError(
+            "Gold partial chunk_id mismatch: "
+            f"expected={expected_chunk_id}, "
+            f"actual={manifest.get('chunk_id')}"
+        )
+
+    if (
+        manifest.get("source_rows")
+        != expected_source_rows
+    ):
+        raise ValueError(
+            "Gold partial source row mismatch: "
+            f"expected={expected_source_rows:,}, "
+            f"actual={manifest.get('source_rows')}"
+        )
+
+    expected_files = {
+        (
+            f"{mart_name}."
+            f"{state_type}.csv"
+        )
+        for mart_name in MART_SPECS
+        for state_type
+        in GOLD_PARTIAL_STATE_TYPES
+    }
+
+    manifest_files = set(
+        manifest.get(
+            "files",
+            {},
+        ).keys()
+    )
+
+    if manifest_files != expected_files:
+        missing = (
+            expected_files
+            - manifest_files
+        )
+
+        unexpected = (
+            manifest_files
+            - expected_files
+        )
+
+        raise ValueError(
+            "Gold partial manifest files "
+            "do not match expected bundle. "
+            f"missing={sorted(missing)}, "
+            f"unexpected={sorted(unexpected)}"
+        )
+
+    for file_name in sorted(
+        expected_files
+    ):
+        file_path = (
+            chunk_dir
+            / file_name
+        )
+
+        if not file_path.exists():
+            raise FileNotFoundError(
+                f"Gold partial file missing: "
+                f"{file_path}"
+            )
+
+        expected_metadata = (
+            manifest["files"][
+                file_name
+            ]
+        )
+
+        actual_row_count = sum(
+            len(chunk)
+            for chunk in pd.read_csv(
+                file_path,
+                chunksize=100_000,
+                low_memory=False,
+            )
+        )
+
+        if (
+            actual_row_count
+            != expected_metadata["row_count"]
+        ):
+            raise ValueError(
+                "Gold partial row count "
+                "mismatch: "
+                f"{file_name}, "
+                f"expected="
+                f"{expected_metadata['row_count']}, "
+                f"actual={actual_row_count}"
+            )
+
+        actual_checksum = (
+            calculate_file_checksum(
+                file_path
+            )
+        )
+
+        if (
+            actual_checksum
+            != expected_metadata["checksum"]
+        ):
+            raise ValueError(
+                "Gold partial checksum "
+                "mismatch: "
+                f"{file_name}"
+            )
+
+    expected_bundle_checksum = (
+        manifest.get(
+            "bundle_checksum"
+        )
+    )
+
+    actual_bundle_checksum = (
+        calculate_gold_bundle_checksum(
+            manifest
+        )
+    )
+
+    if (
+        expected_bundle_checksum
+        != actual_bundle_checksum
+    ):
+        raise ValueError(
+            "Gold partial bundle checksum "
+            "mismatch."
+        )
+
+    return {
+        "chunk_id": expected_chunk_id,
+        "source_rows": expected_source_rows,
+        "file_count": len(
+            expected_files
+        ),
+        "bundle_checksum": (
+            actual_bundle_checksum
+        ),
+    }
 
 
 def build_gold_partials(
@@ -257,9 +540,23 @@ def build_gold_partials(
         ),
         start=1,
     ):
-        write_gold_partial_bundle(
-            chunk,
-            chunk_index,
+        chunk_id = (
+            f"chunk_{chunk_index:03d}"
+        )
+
+        chunk_dir = (
+            write_gold_partial_bundle(
+                chunk,
+                chunk_index,
+            )
+        )
+
+        validation = (
+            validate_gold_partial_bundle(
+                chunk_dir=chunk_dir,
+                expected_chunk_id=chunk_id,
+                expected_source_rows=len(chunk),
+            )
         )
 
         total_rows += len(chunk)
@@ -267,10 +564,11 @@ def build_gold_partials(
 
         print(
             f"Created Gold partial "
-            f"chunk_{chunk_index:03d}: "
-            f"{len(chunk):,} source rows"
+            f"{chunk_id}: "
+            f"{len(chunk):,} source rows "
+            f"[validation=PASS, "
+            f"files={validation['file_count']}]"
         )
-
     if total_rows == 0:
         raise ValueError(
             "Silver input contains no rows."
@@ -473,7 +771,6 @@ def finalize_gold_mart(
         "output_file": str(output_file),
         "available": output_file.exists(),
     }
-
 
 def aggregate_by_group(
     group_cols: list[str],
