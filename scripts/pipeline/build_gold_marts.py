@@ -18,11 +18,14 @@ from src.config import (
 
 from src.recovery import (
     finish_chunk_attempt,
+    get_chunk_completion_summary,
     get_dataset_chunk_metadata,
     get_or_create_dataset_chunk,
     invalidate_dataset_chunk,
+    recover_stale_running_chunk,
     start_chunk_attempt,
 )
+
 SILVER_FILE = SILVER_DATA_DIR / "vendor_payments_silver.csv"
 
 GOLD_CANDIDATE_DIR = (
@@ -654,7 +657,19 @@ def build_gold_partials(
             invalidate_dataset_chunk(
                 dataset_chunk_id
             )
-            
+
+        stale_after_seconds = int(
+            os.getenv(
+                "CHUNK_STALE_AFTER_SECONDS",
+                "900",
+            )
+        )
+
+        recover_stale_running_chunk(
+            dataset_chunk_id,
+            stale_after_seconds=stale_after_seconds,
+        )
+
         chunk_execution_id = (
             start_chunk_attempt(
                 dataset_chunk_id
@@ -726,6 +741,38 @@ def build_gold_partials(
             "Silver input contains no rows."
         )
 
+    completion = get_chunk_completion_summary(
+        dataset_version_id
+    )
+
+    expected_total_chunks = total_chunks
+
+    if (
+            completion["total_chunks"]
+            != expected_total_chunks
+            or completion["validated_chunks"]
+            != expected_total_chunks
+            or completion["failed_chunks"] != 0
+            or completion["processing_chunks"] != 0
+            or completion["created_chunks"] != 0
+            or completion["min_chunk_index"] != 1
+            or completion["max_chunk_index"]
+            != expected_total_chunks
+    ):
+        raise RuntimeError(
+            "Gold chunk completeness gate failed: "
+            f"expected_total_chunks="
+            f"{expected_total_chunks}, "
+            f"summary={completion}"
+        )
+
+    print(
+        "Gold chunk completeness gate passed: "
+        f"{completion['validated_chunks']}/"
+        f"{expected_total_chunks} "
+        "chunks VALIDATED"
+    )
+    
     return {
         "source_rows": total_rows,
         "chunk_count": total_chunks,
