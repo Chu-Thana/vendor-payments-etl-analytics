@@ -3,7 +3,17 @@ from datetime import datetime, timedelta, timezone
 
 import os
 import psycopg2
+from pathlib import Path
 
+from dotenv import load_dotenv
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+load_dotenv(
+    PROJECT_ROOT / ".env",
+    override=False,
+)
 
 def invalidate_dataset_chunk(
     dataset_chunk_id: int,

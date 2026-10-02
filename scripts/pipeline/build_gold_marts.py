@@ -4,6 +4,7 @@ import sys
 import pandas as pd
 import hashlib
 import json
+import os
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
@@ -15,6 +16,11 @@ from src.config import (
     ensure_directories,
 )
 
+from src.recovery import (
+    finish_chunk_attempt,
+    get_or_create_dataset_chunk,
+    start_chunk_attempt,
+)
 
 SILVER_FILE = SILVER_DATA_DIR / "vendor_payments_silver.csv"
 
@@ -528,36 +534,118 @@ def build_gold_partials(
             f"Silver file not found: {silver_file}"
         )
 
+    dataset_version_id_raw = os.getenv(
+        "RECOVERY_DATASET_VERSION_ID"
+    )
+
+    if not dataset_version_id_raw:
+        raise RuntimeError(
+            "RECOVERY_DATASET_VERSION_ID "
+            "is required for Gold chunk recovery."
+        )
+
+    dataset_version_id = int(
+        dataset_version_id_raw
+    )
+
     total_rows = 0
     total_chunks = 0
 
     for chunk_index, chunk in enumerate(
-        pd.read_csv(
-            silver_file,
-            chunksize=CHUNK_SIZE,
-            encoding="utf-8",
-            low_memory=False,
-        ),
-        start=1,
+            pd.read_csv(
+                silver_file,
+                chunksize=CHUNK_SIZE,
+                encoding="utf-8",
+                low_memory=False,
+            ),
+            start=1,
     ):
         chunk_id = (
             f"chunk_{chunk_index:03d}"
         )
 
-        chunk_dir = (
-            write_gold_partial_bundle(
-                chunk,
-                chunk_index,
+        source_start_row = (
+                (chunk_index - 1)
+                * CHUNK_SIZE
+                + 1
+        )
+
+        source_end_row = (
+                source_start_row
+                + len(chunk)
+                - 1
+        )
+
+        dataset_chunk_id = (
+            get_or_create_dataset_chunk(
+                dataset_version_id=(
+                    dataset_version_id
+                ),
+                chunk_id=chunk_id,
+                chunk_index=chunk_index,
+                source_start_row=(
+                    source_start_row
+                ),
+                source_end_row=(
+                    source_end_row
+                ),
             )
         )
 
-        validation = (
-            validate_gold_partial_bundle(
-                chunk_dir=chunk_dir,
-                expected_chunk_id=chunk_id,
-                expected_source_rows=len(chunk),
+        chunk_execution_id = (
+            start_chunk_attempt(
+                dataset_chunk_id
             )
         )
+
+        try:
+            chunk_dir = (
+                write_gold_partial_bundle(
+                    chunk,
+                    chunk_index,
+                )
+            )
+
+            validation = (
+                validate_gold_partial_bundle(
+                    chunk_dir=chunk_dir,
+                    expected_chunk_id=(
+                        chunk_id
+                    ),
+                    expected_source_rows=(
+                        len(chunk)
+                    ),
+                )
+            )
+
+            bundle_checksum = (
+                validation[
+                    "bundle_checksum"
+                ]
+            )
+
+            finish_chunk_attempt(
+                chunk_execution_id=(
+                    chunk_execution_id
+                ),
+                success=True,
+                row_count=len(chunk),
+                checksum=bundle_checksum,
+                error_message=None,
+            )
+
+        except Exception as exc:
+            finish_chunk_attempt(
+                chunk_execution_id=(
+                    chunk_execution_id
+                ),
+                success=False,
+                row_count=None,
+                checksum=None,
+                error_message=str(exc),
+            )
+
+            raise
 
         total_rows += len(chunk)
         total_chunks += 1
@@ -569,6 +657,7 @@ def build_gold_partials(
             f"[validation=PASS, "
             f"files={validation['file_count']}]"
         )
+
     if total_rows == 0:
         raise ValueError(
             "Silver input contains no rows."
@@ -1131,7 +1220,6 @@ def build_gold_marts(
     # Phase 1:
     # Rebuild Gold partial checkpoints from scratch.
     # Recovery-aware resume will be added later.
-    clear_gold_partial_dir()
 
     partial_result = build_gold_partials(
         silver_file=silver_file
