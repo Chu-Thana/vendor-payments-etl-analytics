@@ -9,18 +9,13 @@ TEST_SILVER_FILE = SILVER_DATA_DIR / "vendor_payments_silver_test.csv"
 TEST_GOLD_DIR = PROCESSED_DATA_DIR / "gold_test"
 
 
-def test_sample_pipeline_builds_silver_and_gold_outputs():
-    """
-    Run the ETL pipeline on the committed sample dataset.
+def test_sample_pipeline_builds_silver_and_gold_outputs(
+    mock_batch_recovery,
+):
 
-    This test verifies that:
-    - sample input exists
-    - silver output is created
-    - gold mart files are created
-    - required output columns exist
-    """
-
-    assert SAMPLE_DATA_FILE.exists(), f"Sample file not found: {SAMPLE_DATA_FILE}"
+    assert SAMPLE_DATA_FILE.exists(), (
+        f"Sample file not found: {SAMPLE_DATA_FILE}"
+    )
 
     transform_to_silver(
         input_file=SAMPLE_DATA_FILE,
@@ -29,7 +24,10 @@ def test_sample_pipeline_builds_silver_and_gold_outputs():
 
     assert TEST_SILVER_FILE.exists()
 
-    silver_df = pd.read_csv(TEST_SILVER_FILE, nrows=100)
+    silver_df = pd.read_csv(
+        TEST_SILVER_FILE,
+        nrows=100,
+    )
 
     required_silver_columns = {
         "source_row_hash",
@@ -44,7 +42,9 @@ def test_sample_pipeline_builds_silver_and_gold_outputs():
         "is_large_paid_1m",
     }
 
-    assert required_silver_columns.issubset(set(silver_df.columns))
+    assert required_silver_columns.issubset(
+        set(silver_df.columns)
+    )
 
     build_gold_marts(
         silver_file=TEST_SILVER_FILE,
@@ -61,7 +61,10 @@ def test_sample_pipeline_builds_silver_and_gold_outputs():
 
     for file_name in expected_gold_files:
         file_path = TEST_GOLD_DIR / file_name
-        assert file_path.exists(), f"Missing gold mart: {file_path}"
+
+        assert file_path.exists(), (
+            f"Missing gold mart: {file_path}"
+        )
 
         df = pd.read_csv(file_path)
         assert len(df) > 0

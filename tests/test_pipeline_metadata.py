@@ -18,7 +18,10 @@ TEST_GOLD_DIR = (
 )
 
 
-def test_sample_pipeline_returns_execution_metrics():
+def test_sample_pipeline_returns_execution_metrics(
+    mock_batch_recovery,
+):
+
     silver_result = transform_to_silver(
         input_file=SAMPLE_DATA_FILE,
         output_file=TEST_SILVER_FILE,
