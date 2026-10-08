@@ -2,48 +2,60 @@
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
 ![Pipeline](https://img.shields.io/badge/Pipeline-Batch%20ETL-orange)
-![Processing](https://img.shields.io/badge/Processing-Pandas-lightblue)
+![Processing](https://img.shields.io/badge/Processing-Chunk--Based-lightblue)
 ![Records](https://img.shields.io/badge/Records-3.35M%2B-1f4e79)
 ![Gold Marts](https://img.shields.io/badge/Gold%20Marts-5-success)
+![Recovery](https://img.shields.io/badge/Recovery-PostgreSQL-336791?logo=postgresql&logoColor=white)
 ![Testing](https://img.shields.io/badge/Testing-20%20Passed-0A9EDC?logo=pytest&logoColor=white)
 ![Code Quality](https://img.shields.io/badge/Code%20Quality-Ruff-8A2BE2)
 ![CI](https://github.com/Chu-Thana/vendor-payments-etl-analytics/actions/workflows/ci.yml/badge.svg)
 
 Production-style Batch ETL pipeline for transforming large-scale Vendor Payments data into validated Silver datasets and analytics-ready Gold marts.
 
-This repository is the Batch transformation and data-quality layer of the Vendor Payments Data Engineering Platform. It owns the Raw → Silver → Gold lifecycle and produces trusted outputs for downstream Airflow, AWS, API, and analytics components.
+This repository is the Batch transformation and data-quality layer of the Vendor Payments Data Platform. It owns the **Raw → Silver → Gold** lifecycle while integrating candidate-first publishing, validation gates, chunk-level recovery metadata, and downstream orchestration through Apache Airflow.
 
 ---
 
 ## 📌 Project Summary
 
-The pipeline processes more than **3.35 million Vendor Payments records** through a validated Batch ETL workflow.
+The pipeline processes more than **3.35 million Vendor Payments records** through a recovery-aware Batch ETL workflow.
 
 The current implementation demonstrates:
 
-- Chunk-based processing for large CSV datasets
-- Data-readiness checks before transformation
+- 100,000-row chunk processing for large CSV datasets
 - Raw → Silver → Gold layered processing
 - Data cleaning, parsing, and normalization
 - Deterministic row identity and business-level keys
 - Explicit data-quality flags
-- Silver output validation
+- Candidate-first Silver publishing
+- Candidate-first Gold publishing
+- Silver and Gold hard validation gates
 - Five analytics-ready Gold marts
-- Gold output validation
-- Machine-readable pipeline metadata
-- Sample execution for CI
+- Chunk-level Recovery metadata in PostgreSQL
+- Pipeline-stage execution metadata
+- Full and sample execution modes
 - Pytest, Ruff, and GitHub Actions validation
+- Airflow integration for cloud publishing and downstream validation
 
 The core processing boundary is:
 
 ```text
-Raw Data
-→ Readiness Checks
-→ Silver Transformation
-→ Silver Validation
-→ Gold Mart Build
-→ Gold Validation
-→ Runtime Metadata
+Raw Input
+→ Silver Candidate Build
+→ Silver Validation Gate
+→ Gold Candidate Build
+→ Gold Validation Gate
+→ Trusted Silver / Gold Outputs
+```
+
+Recovery metadata is recorded alongside execution:
+
+```text
+Pipeline Run
+→ Stage Execution
+→ Chunk Registration
+→ Chunk Attempt
+→ Validation Result
 ```
 
 ---
@@ -52,25 +64,33 @@ Raw Data
 
 ![Vendor Payments Batch ETL Architecture](assets/00_batch_etl_architecture.png)
 
-The Batch ETL flow is intentionally independent from the Streaming pipeline.
+The final Batch design separates **transformation**, **validation**, **publication**, and **recovery state**.
 
 ```text
-Raw Data Source
-→ Data Readiness Checks
-→ Silver Transformation
-→ Silver Validation
-→ Gold Mart Build
-→ Gold Validation & Metadata
+Raw Input Data
+        ↓
+Silver Candidate Build
+        ↓
+Silver Validation Gate
+        ↓
+Gold Candidate Build
+        ↓
+Gold Validation Gate
+        ↓
+Published Trusted Outputs
 ```
+
+PostgreSQL Recovery metadata tracks execution state independently of the generated CSV artifacts.
 
 ### Layer Responsibilities
 
-- **Raw Data Source** — Original Vendor Payments CSV plus committed representative sample input.
-- **Data Readiness Checks** — Validate schema, missing values, duplicate characteristics, business rules, and time coverage.
-- **Silver Transformation** — Process 100K-row chunks, clean and normalize fields, parse dates and amounts, build deterministic keys, and add quality flags.
-- **Silver Validation** — Verify output row count, required columns, row-hash uniqueness, fiscal-year coverage, and required-field null behavior.
-- **Gold Mart Build** — Build fiscal-year, department, supplier, pending-payment, and fund-category analytics marts.
-- **Gold Validation & Metadata** — Validate all five marts and generate structured execution metadata.
+- **Raw Input Data** — Vendor Payments CSV containing more than 3.35M source records.
+- **Silver Candidate Build** — Chunk-based cleaning, normalization, type parsing, deterministic keys, and quality flags.
+- **Silver Validation Gate** — Required-column checks, row-count consistency, source-row-hash uniqueness, and Silver quality validation.
+- **Gold Candidate Build** — Chunk-based aggregation into five business marts.
+- **Gold Validation Gate** — Mart schema checks, output validation, and publication only after PASS.
+- **Published Trusted Outputs** — Validated Silver and Gold datasets available for downstream Airflow and Cloud processing.
+- **Execution Metadata & Recovery** — PostgreSQL-backed pipeline, stage, and chunk execution state for audit and rerun visibility.
 
 ---
 
@@ -79,27 +99,25 @@ Raw Data Source
 | Metric | Result |
 | --- | ---: |
 | Source records processed | 3,354,965 |
-| Silver records produced | 3,354,965 |
+| Silver records validated | 3,354,965 |
 | Processing chunks | 34 |
 | Chunk size | 100,000 rows |
 | Silver columns validated | 49 |
 | Source row hash uniqueness | 100% |
 | Gold marts produced | 5 |
 | Gold marts passed validation | 5 / 5 |
-| Latest full execution runtime | 530.05 seconds |
-| Latest full execution duration | 8.83 minutes |
 | Automated tests | 20 passed |
 | Ruff linting | PASS |
+| Recovery-aware Batch stages | 12 succeeded |
 | Pipeline status | Success |
-| GitHub Actions CI | PASS |
 
 ---
 
 ## 📂 Dataset
 
-The source dataset contains government Vendor Payments and purchase-order records.
+The source dataset contains Vendor Payments and purchase-order records.
 
-Fields include:
+Representative fields include:
 
 - Fiscal year
 - Organization group and department
@@ -117,7 +135,7 @@ The full source file remains local because of its size:
 data/raw/Vendor_Payments.csv
 ```
 
-A representative sample is committed for local validation and CI:
+A representative sample is committed for tests and CI:
 
 ```text
 data/sample/vendor_payments_sample.csv
@@ -125,47 +143,57 @@ data/sample/vendor_payments_sample.csv
 
 ---
 
-## 🧪 Data Readiness Checks
+## 🧪 Data Readiness and Transformation Rules
 
-The source is profiled before transformation.
+The Batch pipeline preserves suspicious records where possible and surfaces them through explicit flags rather than silently dropping them.
 
-| Check | Purpose |
-| --- | --- |
-| File Structure | Validate file shape, delimiter, header, and malformed rows |
-| Schema | Confirm expected source columns |
-| Data Types | Validate numeric, date, timestamp, and identifier parsing |
-| Missing Values | Separate critical, warning-level, and optional fields |
-| Duplicate Strategy | Evaluate row identity and business-level keys |
-| Business Rules | Detect negative payments, large values, and date inconsistencies |
-| Dimension Profiling | Review departments, suppliers, programs, and funds |
-| Time Coverage | Validate fiscal-year range and source freshness |
+Representative checks and transformations include:
 
-The readiness process informs transformation rules rather than silently dropping suspicious records.
+- Expected source schema validation
+- Numeric cleaning
+- Date and timestamp parsing
+- Text trimming and normalization
+- Contract-number normalization
+- Deterministic row hashing
+- Business composite keys
+- Missing department checks
+- Missing purchase-order date checks
+- Negative payment flags
+- Large payment thresholds
+- Fiscal-year consistency checks
 
 ---
 
-## 🥈 Silver Transformation
+# 🥈 Silver Layer
 
-The Silver layer standardizes Raw data while preserving row-level traceability.
+## Chunk-Based Transformation
 
-Processing includes:
-
-- Expected schema validation
-- 100,000-row chunk processing
-- Snake-case column renaming
-- Numeric cleaning
-- Date and timestamp parsing
-- Contract-number normalization
-- Text trimming and normalization
-- Deterministic `source_row_hash`
-- Business-level `business_composite_key`
-- Fiscal-year and purchase-order date comparison
-- Explicit data-quality flags
-
-Silver output:
+The full dataset is processed in:
 
 ```text
-data/processed/silver/vendor_payments_silver.csv
+100,000-row chunks
+```
+
+This avoids loading the complete 3.35M+ row dataset into memory at once.
+
+Each chunk is transformed independently and written to a chunk artifact before final Silver assembly.
+
+Representative Silver fields include:
+
+```text
+source_row_hash
+business_composite_key
+fiscal_year
+department
+purchase_order
+supplier_name
+vouchers_paid
+vouchers_pending
+encumbrance_balance
+data_as_of
+data_loaded_at
+po_year
+po_month
 ```
 
 Representative quality flags include:
@@ -184,134 +212,244 @@ is_non_profit
 
 ---
 
-## ✅ Silver Output Validation
+## Candidate-First Silver Publishing
+
+The Silver layer no longer publishes transformation output immediately.
+
+```text
+Transform
+→ Silver candidate
+→ Validate
+→ Publish trusted Silver only on PASS
+```
+
+Candidate output:
+
+```text
+data/processed/silver/vendor_payments_silver.candidate.csv
+```
+
+Published trusted output:
+
+```text
+data/processed/silver/vendor_payments_silver.csv
+```
+
+This prevents a failed or partially produced transformation from replacing the last trusted Silver dataset.
+
+---
+
+## ✅ Silver Validation Gate
 
 The latest full Silver validation confirms:
 
 ```text
-Total rows checked: 3,354,965
+Status: PASS
+Rows checked: 3,354,965
 Column count: 49
-All required Silver columns are present
-Unique source_row_hash count: 3,354,965
-source_row_hash uniqueness: 100.0000%
+source_row_hash uniqueness: 100%
 Fiscal year range: 2007–2026
 ```
 
 ![Silver Output Validation](assets/02_silver_output_validation.png)
 
-Required business and identifier fields are checked explicitly. Nullable fields are reported rather than silently ignored.
+The validation gate checks required columns, row-count consistency, deterministic row identity, and required data-quality conditions before publication.
 
 ---
 
-## 🥇 Gold Analytics Marts
+# 🥇 Gold Layer
 
-The Gold layer builds five analytics-ready datasets.
+## Gold Candidate Build
 
-| Mart | Purpose | Rows |
-| --- | --- | ---: |
-| `mart_spending_by_fiscal_year` | Fiscal-year spending trends | 20 |
-| `mart_spending_by_department` | Department-level spending analytics | 1,121 |
-| `mart_spending_by_supplier_top_n` | Top supplier analysis | 100 |
-| `mart_pending_by_department` | Pending voucher monitoring | 642 |
-| `mart_fund_category_summary` | Fund type and category analytics | 1,061 |
+The Gold layer produces five analytics-ready business marts:
 
-Gold output directory:
+| Mart | Purpose |
+| --- | --- |
+| `mart_spending_by_fiscal_year` | Fiscal-year spending trends |
+| `mart_spending_by_department` | Department-level spending analytics |
+| `mart_spending_by_supplier_top_n` | Top supplier analysis |
+| `mart_pending_by_department` | Pending voucher monitoring |
+| `mart_fund_category_summary` | Fund-category analytics |
+
+Gold processing uses chunk-based partial aggregation followed by final aggregation.
+
+The supplier distinct-count logic is calculated across the complete dataset rather than summing per-chunk distinct counts.
+
+---
+
+## Candidate-First Gold Publishing
+
+Gold output follows the same trusted-publication boundary as Silver.
+
+```text
+Build Gold candidates
+→ Validate all marts
+→ Publish complete Gold set only on PASS
+```
+
+Candidate directory:
+
+```text
+data/processed/gold_candidate/
+```
+
+Published directory:
 
 ```text
 data/processed/gold/
 ```
 
-Each mart contains aggregated payment metrics, record counts, and selected data-quality indicators.
+This avoids publishing a partially updated Gold layer when one mart fails validation.
 
 ---
 
-## ✅ Gold Output Validation
+## ✅ Gold Validation Gate
 
-The latest Gold validation confirms:
+The latest full Gold validation confirms:
 
 ```text
 Overall status: PASS
-
-mart_spending_by_fiscal_year      PASS
-mart_spending_by_department       PASS
-mart_spending_by_supplier_top_n   PASS
-mart_pending_by_department        PASS
-mart_fund_category_summary        PASS
-```
-
-Final validation decision:
-
-```text
-PASS: All gold mart files exist, contain rows, and include required columns.
+Mart count: 5
+Passed mart count: 5
+Failed mart count: 0
 ```
 
 ![Gold Output Validation](assets/03_gold_output_validation.png)
 
+The five marts are validated as a complete set before trusted publication.
+
 ---
 
-## 🖥️ Full Batch Execution
+# 🔁 Recovery-Aware Chunk Processing
 
-The latest full run processed all **3,354,965 records** in **34 chunks** and produced all five Gold marts.
+The Batch pipeline integrates with the PostgreSQL Recovery Database.
+
+Each Silver and Gold chunk can be associated with persistent execution metadata such as:
 
 ```text
-Mode: FULL
-Status: success
-Total rows processed: 3,354,965
-Chunks processed: 34
-Gold marts created: 5
-Elapsed time: 530.05 seconds
-Duration: 8.83 minutes
+dataset_version_id
+chunk_id
+chunk_index
+source_start_row
+source_end_row
+status
+row_count
+checksum
+attempt
+```
+
+This allows the pipeline to distinguish between:
+
+```text
+CREATED
+PROCESSING
+VALIDATED
+FAILED
+```
+
+and supports recovery behavior such as:
+
+- Reusing validated chunk artifacts when metadata still matches
+- Reprocessing a chunk when file metadata no longer matches
+- Recovering stale running attempts
+- Recording successful and failed chunk attempts
+- Enforcing a chunk-completeness gate before final assembly
+
+A valid dataset version is supplied through:
+
+```text
+RECOVERY_DATASET_VERSION_ID
+```
+
+for recovery-aware production execution.
+
+---
+
+## 🧾 Batch Recovery Metadata
+
+The latest verified Batch run records all major stages as successful:
+
+```text
+TRANSFORM_SILVER
+CHECK_SILVER
+BUILD_GOLD
+CHECK_GOLD
+UPLOAD_S3
+REDSHIFT_CREATE_SCHEMAS
+REDSHIFT_CREATE_BATCH_LANDING_TABLES
+REDSHIFT_COPY_BATCH_GOLD
+REDSHIFT_CREATE_ANALYTICS_VIEWS
+REDSHIFT_VALIDATE_ANALYTICS
+CROSS_LAYER_VALIDATION
+GROUPED_CROSS_LAYER_VALIDATION
+```
+
+![Batch Recovery Metadata](assets/06_batch_recovery_metadata.png)
+
+This provides persistent execution history beyond Airflow task color or local console logs.
+
+---
+
+# 🖥️ Full Batch Execution
+
+In the integrated platform, the final full Batch execution is orchestrated through the dedicated Airflow Batch DAG.
+
+```text
+check_recovery_database
+→ check_batch_etl_scripts
+→ transform_silver
+→ check_silver
+→ build_gold
+→ check_gold
+→ upload_batch_gold_to_s3
+→ Redshift processing
+→ cross-layer validation
+→ grouped cross-layer validation
 ```
 
 ![Full Batch Execution](assets/01_full_batch_execution.png)
 
-The pipeline also generates:
-
-```text
-reports/pipeline_summary.json
-reports/silver_output_validation_report.txt
-reports/gold_output_validation_report.txt
-```
+The final DAG run completed successfully across the complete Batch lifecycle.
 
 ---
 
-## 🧾 Runtime Metadata
+# 🔎 Downstream Cross-Layer Validation
 
-Each execution generates a machine-readable summary.
+The Batch repository owns Raw → Silver → Gold transformation and local validation.
 
-Full mode:
+Downstream cloud reconciliation is orchestrated through Airflow using the Cloud Data Platform repository.
 
-```text
-reports/pipeline_summary.json
-```
-
-Sample mode:
+Validation includes:
 
 ```text
-reports/pipeline_summary_sample.json
+S3 / Athena metrics
+↔
+Redshift metrics
 ```
 
-The summary records:
+Summary reconciliation compares metrics such as:
 
 ```text
-Project identity
-Pipeline version
-Execution mode
-Execution status
-Runtime
-Chunk size
-Source row count
-Silver row count
-Chunk count
-Gold mart count
-Validation outputs
+row_count
+source_record_count
+total_vouchers_paid
+total_vouchers_pending
+total_encumbrance_balance
 ```
 
-This provides structured execution evidence instead of relying only on console logs.
+Grouped reconciliation additionally validates:
+
+```text
+fiscal_year
+department
+fund_category
+```
+
+This keeps transformation ownership in the Batch repository while preserving independent data-lake-to-warehouse validation downstream.
 
 ---
 
-## 🧪 Automated Testing and Code Quality
+# 🧪 Automated Testing and Code Quality
 
 Run:
 
@@ -320,7 +458,7 @@ python -m pytest -q
 python -m ruff check .
 ```
 
-Current result:
+Latest verified result:
 
 ```text
 20 passed
@@ -329,11 +467,13 @@ All checks passed!
 
 ![Batch Tests and Ruff](assets/04_batch_tests_and_lint.png)
 
-Automated tests cover schema definitions, cleaning, deterministic keys, sample execution, Gold mart generation, and pipeline metadata.
+The test suite covers transformation utilities, schema definitions, deterministic keys, sample execution, Silver/Gold output generation, and recovery-aware Batch execution contracts.
+
+Recovery DB calls are mocked in sample tests so CI can validate Batch logic without requiring a live PostgreSQL Recovery instance.
 
 ---
 
-## ⚙️ Continuous Integration
+# ⚙️ Continuous Integration
 
 GitHub Actions validates the repository on configured pushes and pull requests.
 
@@ -344,17 +484,17 @@ Repository checkout
 → Python setup
 → Dependency installation
 → Ruff validation
-→ Sample ETL execution
+→ Sample ETL tests
 → Pytest validation
 ```
 
-![Batch CI Success](assets/05_batch_ci_success.png)
+Final CI evidence will be captured after the final multi-repository push.
 
-The latest CI workflow completes successfully on `main`.
+![Batch CI Success](assets/05_batch_ci_success.png)
 
 ---
 
-## 📸 Final Execution Evidence
+# 📸 Final Execution Evidence
 
 ```text
 00_batch_etl_architecture.png
@@ -363,13 +503,14 @@ The latest CI workflow completes successfully on `main`.
 03_gold_output_validation.png
 04_batch_tests_and_lint.png
 05_batch_ci_success.png
+06_batch_recovery_metadata.png
 ```
 
-The evidence set covers architecture, full-scale execution, Silver validation, Gold validation, local automated testing, linting, and CI.
+The evidence set covers architecture, full Batch orchestration, Silver and Gold validation, automated testing and linting, CI, and persistent Recovery metadata.
 
 ---
 
-## 🗂️ Project Structure
+# 🗂️ Project Structure
 
 ```text
 vendor-payments-etl-analytics/
@@ -380,37 +521,46 @@ vendor-payments-etl-analytics/
 │   ├── 02_silver_output_validation.png
 │   ├── 03_gold_output_validation.png
 │   ├── 04_batch_tests_and_lint.png
-│   └── 05_batch_ci_success.png
+│   ├── 05_batch_ci_success.png
+│   └── 06_batch_recovery_metadata.png
 │
 ├── data/
 │   ├── raw/
 │   ├── sample/
 │   └── processed/
 │       ├── silver/
-│       ├── gold/
-│       └── gold_sample/
+│       ├── gold_candidate/
+│       ├── gold_partial/
+│       └── gold/
 │
 ├── reports/
-│   ├── data_readiness_summary.md
-│   ├── pipeline_summary.json
-│   ├── pipeline_summary_sample.json
-│   ├── silver_output_validation_report.txt
-│   └── gold_output_validation_report.txt
-│
 ├── scripts/
 │   ├── checks/
 │   └── pipeline/
+│       ├── transform_silver.py
+│       ├── build_gold_marts.py
+│       └── run_pipeline.py
 │
 ├── src/
 │   ├── cleaning.py
 │   ├── config.py
 │   ├── keys.py
+│   ├── recovery.py
 │   └── schema.py
 │
 ├── tests/
+│   ├── conftest.py
+│   ├── test_cleaning.py
+│   ├── test_keys.py
+│   ├── test_pipeline_metadata.py
+│   ├── test_sample_pipeline.py
+│   ├── test_schema.py
+│   └── test_stream_sample.py
+│
 ├── .github/
 │   └── workflows/
 │       └── ci.yml
+│
 ├── pyproject.toml
 ├── pytest.ini
 ├── requirements.txt
@@ -419,53 +569,99 @@ vendor-payments-etl-analytics/
 
 ---
 
-## ▶️ Run Locally
+# ▶️ Run Locally
 
-Create and activate a virtual environment:
+## 1. Create and activate a virtual environment
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-Install dependencies:
+## 2. Install dependencies
 
 ```powershell
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### Full Pipeline
+## 3. Run tests
 
 ```powershell
-python scripts/pipeline/run_pipeline.py
+python -m pytest -q
 ```
 
-### Sample Pipeline
+## 4. Run Ruff
 
 ```powershell
-python scripts/pipeline/run_pipeline.py --sample
+python -m ruff check .
 ```
-
-Sample mode supports reproducible local validation and GitHub Actions without requiring the full source dataset.
 
 ---
 
-## ☁️ Airflow Integration
+## Recovery-Aware Full Execution
 
-The Batch ETL repository remains independently runnable.
+The final full Batch path requires a valid Recovery dataset version.
 
-In the integrated platform, the dedicated **Batch Pipeline DAG** owns the Batch execution lifecycle:
+In the integrated platform, Apache Airflow creates and supplies the required Recovery context before executing Batch stages.
+
+Recommended full-platform execution:
 
 ```text
-Check Batch ETL source
-→ Run full Batch ETL
-→ Check Silver output
-→ Check Gold outputs
-→ Upload trusted Gold marts to S3
-→ Load Batch data to Redshift
-→ Validate analytics
-→ Athena ↔ Redshift cross-layer validation
+Airflow Batch DAG
+→ Recovery context
+→ Silver candidate build
+→ Silver validation
+→ Gold candidate build
+→ Gold validation
+→ Cloud processing
+```
+
+A direct recovery-aware execution requires a valid:
+
+```text
+RECOVERY_DATASET_VERSION_ID
+```
+
+from the PostgreSQL Recovery Database.
+
+Do not use an arbitrary dataset version ID because chunk metadata is protected by database referential-integrity constraints.
+
+---
+
+## Sample / Test Execution
+
+The committed sample dataset supports reproducible automated validation without requiring the full source dataset or a live Recovery Database.
+
+```powershell
+python -m pytest -q
+```
+
+Recovery integration is mocked in the relevant sample tests while preserving the production requirement for real Recovery metadata.
+
+---
+
+# ☁️ Airflow Integration
+
+The Batch ETL repository remains the owner of Raw → Silver → Gold transformation logic.
+
+The dedicated Airflow Batch DAG owns execution ordering and downstream orchestration:
+
+```text
+check_recovery_database
+→ check_batch_etl_scripts
+→ transform_silver
+→ check_silver
+→ build_gold
+→ check_gold
+→ upload_batch_gold_to_s3
+→ redshift_create_schemas
+→ redshift_create_batch_landing_tables
+→ redshift_copy_batch_gold_from_s3
+→ redshift_create_batch_analytics_views
+→ redshift_validate_batch_analytics
+→ validate_batch_cross_layer
+→ validate_batch_grouped_cross_layer
 ```
 
 Responsibility remains separated:
@@ -473,100 +669,199 @@ Responsibility remains separated:
 ```text
 vendor-payments-etl-analytics
 → Raw → Silver → Gold transformation
-→ Silver / Gold validation
+→ candidate-first publication
+→ local Silver / Gold validation
+→ chunk recovery integration
 
 vendor-payments-airflow-orchestration
 → execution order
-→ Cloud publishing
+→ Recovery stage coordination
+→ cloud publishing
 → warehouse loading
 → downstream validation
 ```
 
 ---
 
-## 🔗 Role in the Vendor Payments Data Platform
+# 🔗 Role in the Vendor Payments Data Platform
 
 ```text
 Vendor Payments Raw Data
-→ Batch ETL
-→ Validated Silver
-→ Validated Gold marts
-→ Airflow Batch Pipeline DAG
-→ Amazon S3
-→ Athena / Redshift
-→ FastAPI
-→ React / Analytics
+        ↓
+Batch ETL
+        ↓
+Silver Candidate
+        ↓
+Silver Validation Gate
+        ↓
+Trusted Silver
+        ↓
+Gold Candidate Marts
+        ↓
+Gold Validation Gate
+        ↓
+Trusted Gold Marts
+        ↓
+Airflow Batch DAG
+        ↓
+Amazon S3
+        ↓
+Athena / Redshift
+        ↓
+Cross-Layer Validation
+        ↓
+API / Analytics
 ```
 
-The same validated Silver dataset is also used as the source for deterministic bounded Streaming-window preparation, while the Batch and Streaming processing lifecycles remain independent.
+The trusted Silver dataset is also used as the source for deterministic bounded Streaming-window preparation, while Batch and Streaming retain separate processing lifecycles.
 
 ---
 
-## 🧠 Key Engineering Decisions
+# 🧠 Key Engineering Decisions
 
-### Why use chunk-based processing?
+## Why use chunk-based processing?
 
-The full source contains more than 3.35 million records. Processing in 100,000-row chunks reduces peak memory usage and avoids loading the entire dataset at once.
+The full source contains more than 3.35 million records.
 
-### Why keep Raw, Silver, and Gold separate?
+Processing in 100,000-row chunks reduces peak memory pressure and avoids requiring the complete dataset to be loaded at once.
+
+---
+
+## Why keep Raw, Silver, and Gold separate?
 
 ```text
 Raw
 → preserve source data
 
 Silver
-→ clean, normalize, and validate row-level data
+→ clean, normalize, validate, and retain row-level traceability
 
 Gold
-→ produce analytics-ready aggregates
+→ produce analytics-ready business aggregates
 ```
-
-### Why use `source_row_hash`?
-
-The source does not provide a reliable single-column primary key. `source_row_hash` provides deterministic row-level identity and supports row-preservation validation.
-
-### Why use a business composite key?
-
-Purchase-order values are not globally unique and many records represent direct payments. The business composite key supports business-level duplicate analysis without incorrectly treating purchase order as a primary key.
-
-### Why preserve negative and large payments?
-
-These values may represent adjustments, reversals, corrections, or legitimate high-value transactions. The pipeline flags them rather than deleting them automatically.
-
-### Why use sample mode?
-
-The full dataset is too large to commit and should not be required by CI. Sample mode provides a reproducible execution path for testing and GitHub Actions.
-
-### Why generate runtime metadata?
-
-Machine-readable metadata makes row counts, runtime, output availability, and validation state reusable by downstream orchestration and portfolio evidence.
 
 ---
 
-## 🛣️ Planned Improvements
+## Why use candidate-first publishing?
+
+A successful transformation does not prove that the resulting dataset is valid.
+
+```text
+candidate
+→ validation
+→ trusted publish
+```
+
+Silver and Gold outputs replace trusted published data only after their validation gate passes.
+
+---
+
+## Why separate transform and validation gates?
+
+Keeping transformation and validation as separate execution boundaries makes failures explicit.
+
+```text
+TRANSFORM_SILVER
+→ CHECK_SILVER
+→ BUILD_GOLD
+→ CHECK_GOLD
+```
+
+A downstream stage cannot continue when its upstream validation gate fails.
+
+---
+
+## Why use `source_row_hash`?
+
+The source does not provide a reliable single-column primary key.
+
+`source_row_hash` provides deterministic row-level identity and supports row-preservation and duplicate validation.
+
+---
+
+## Why use a business composite key?
+
+Purchase-order values are not globally unique, and many rows represent direct payments.
+
+A business composite key supports business-level duplicate analysis without incorrectly treating purchase order as a universal primary key.
+
+---
+
+## Why preserve negative and large payments?
+
+These values may represent adjustments, reversals, corrections, or legitimate high-value transactions.
+
+The pipeline flags them rather than deleting them automatically.
+
+---
+
+## Why use PostgreSQL Recovery metadata?
+
+Airflow task state alone is not enough to represent data-processing progress inside a multi-chunk ETL operation.
+
+The Recovery Database persists:
+
+```text
+pipeline run
+stage
+dataset version
+chunk
+attempt
+status
+row count
+checksum
+validation result
+```
+
+This supports auditability, stale-attempt recovery, chunk-level reruns, and trusted resume behavior.
+
+---
+
+## Why validate chunk checksums and row counts?
+
+A chunk marked `VALIDATED` should only be reused when the corresponding file still matches its recorded metadata.
+
+If the file no longer matches, the chunk is invalidated and reprocessed rather than silently reused.
+
+---
+
+## Why use sample mode and mocked Recovery integration in tests?
+
+The full source dataset is too large to commit, and CI should not require a live PostgreSQL service just to validate Batch transformation logic.
+
+The committed sample provides a reproducible test path while the Recovery integration contract is mocked at the external dependency boundary.
+
+---
+
+# 🛣️ Planned Improvements
 
 Possible production-oriented extensions include:
 
-- Incremental or partition-aware Batch processing
-- Persistent execution-history storage
+- Incremental or partition-aware Batch ingestion
 - Configurable data-quality thresholds
 - Centralized observability and alerting
 - Cloud-backed source ingestion
 - Additional performance and memory profiling
+- Production-grade retention policies for Recovery metadata
+- Automated alerting for failed validation gates
 
 ---
 
-## 🎯 Key Takeaway
+# 🎯 Key Takeaway
 
-The Batch ETL Pipeline converts a large Raw Vendor Payments source into trusted Silver and Gold datasets through explicit transformation and validation stages.
+The Batch ETL pipeline now combines large-scale chunk processing with explicit publication and recovery boundaries:
 
 ```text
 3.35M+ Raw Records
 → 34 Processing Chunks
-→ 3,354,965 Validated Silver Rows
-→ 5 Validated Gold Marts
-→ Runtime Metadata
+→ Silver Candidate
+→ Silver Validation Gate
+→ Trusted Silver
+→ 5 Gold Candidate Marts
+→ Gold Validation Gate
+→ Trusted Gold
+→ PostgreSQL Recovery Metadata
 → Airflow / AWS / API / Analytics
 ```
 
-The result is a reproducible Batch foundation with clear data-layer responsibilities, row-level traceability, analytics-ready outputs, automated validation, and downstream integration.
+The result is a reproducible, recovery-aware Batch foundation with clear data-layer ownership, row-level traceability, candidate-first publication, validation gates, analytics-ready outputs, automated testing, and measurable downstream integration.

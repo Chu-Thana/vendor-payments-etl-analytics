@@ -84,13 +84,16 @@ def check_silver_output(
         if columns is None:
             columns = list(chunk.columns)
             missing_required_columns = [
-                col for col in REQUIRED_COLUMNS
+                col
+                for col in REQUIRED_COLUMNS
                 if col not in columns
             ]
 
         for col in REQUIRED_COLUMNS:
             if col in chunk.columns:
-                null_counts[col] += int(chunk[col].isna().sum())
+                null_counts[col] += int(
+                    chunk[col].isna().sum()
+                )
 
         if "source_row_hash" in chunk.columns:
             unique_source_hashes.update(
@@ -132,29 +135,82 @@ def check_silver_output(
                     else max(fiscal_year_max, current_max)
                 )
 
-    status = (
-        "PASS"
-        if not missing_required_columns
-        and total_rows == len(unique_source_hashes)
-        else "PASS_WITH_WARNINGS"
+    unique_source_hash_count = len(unique_source_hashes)
+
+    duplicate_source_hash_count = max(
+        total_rows
+        - unique_source_hash_count
+        - null_counts.get("source_row_hash", 0),
+        0,
     )
 
     uniqueness_pct = (
-        (len(unique_source_hashes) / total_rows) * 100
+        (unique_source_hash_count / total_rows) * 100
         if total_rows
         else 0
     )
 
-    report_path.parent.mkdir(parents=True, exist_ok=True)
+    critical_failures: list[str] = []
+    warnings: list[str] = []
 
-    with open(report_path, "w", encoding="utf-8") as report:
-        report.write("SILVER OUTPUT VALIDATION REPORT\n")
+    if total_rows == 0:
+        critical_failures.append(
+            "Silver output contains no rows."
+        )
+
+    if missing_required_columns:
+        critical_failures.append(
+            "Missing required columns: "
+            f"{missing_required_columns}"
+        )
+
+    source_hash_null_count = null_counts.get(
+        "source_row_hash",
+        0,
+    )
+
+    if source_hash_null_count > 0:
+        critical_failures.append(
+            "source_row_hash contains "
+            f"{source_hash_null_count} null values."
+        )
+
+    if duplicate_source_hash_count > 0:
+        warnings.append(
+            "Found "
+            f"{duplicate_source_hash_count} "
+            "duplicate source_row_hash values."
+        )
+
+    if critical_failures:
+        status = "FAIL"
+    elif warnings:
+        status = "PASS_WITH_WARNINGS"
+    else:
+        status = "PASS"
+
+    report_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with open(
+        report_path,
+        "w",
+        encoding="utf-8",
+    ) as report:
+        report.write(
+            "SILVER OUTPUT VALIDATION REPORT\n"
+        )
         report.write("=" * 80 + "\n\n")
 
         report.write(f"Silver file: {silver_file}\n")
-        report.write(f"Total rows checked: {total_rows:,}\n")
         report.write(
-            f"Column count: {len(columns) if columns else 0}\n\n"
+            f"Total rows checked: {total_rows:,}\n"
+        )
+        report.write(
+            f"Column count: "
+            f"{len(columns) if columns else 0}\n\n"
         )
 
         report.write("REQUIRED COLUMN CHECK\n")
@@ -162,7 +218,7 @@ def check_silver_output(
 
         if missing_required_columns:
             report.write(
-                f"Missing required columns: "
+                "Missing required columns: "
                 f"{missing_required_columns}\n"
             )
         else:
@@ -170,24 +226,44 @@ def check_silver_output(
                 "All required silver columns are present.\n"
             )
 
-        report.write("\nSOURCE ROW HASH CHECK\n")
+        report.write(
+            "\nSOURCE ROW HASH CHECK\n"
+        )
         report.write("-" * 80 + "\n")
         report.write(
-            f"Unique source_row_hash count: "
-            f"{len(unique_source_hashes):,}\n"
+            "Unique source_row_hash count: "
+            f"{unique_source_hash_count:,}\n"
         )
-        report.write(f"Total rows: {total_rows:,}\n")
         report.write(
-            f"source_row_hash uniqueness pct: "
+            "Duplicate source_row_hash count: "
+            f"{duplicate_source_hash_count:,}\n"
+        )
+        report.write(
+            "Null source_row_hash count: "
+            f"{source_hash_null_count:,}\n"
+        )
+        report.write(
+            f"Total rows: {total_rows:,}\n"
+        )
+        report.write(
+            "source_row_hash uniqueness pct: "
             f"{uniqueness_pct:.4f}%\n"
         )
 
-        report.write("\nFISCAL YEAR RANGE\n")
+        report.write(
+            "\nFISCAL YEAR RANGE\n"
+        )
         report.write("-" * 80 + "\n")
-        report.write(f"Fiscal year min: {fiscal_year_min}\n")
-        report.write(f"Fiscal year max: {fiscal_year_max}\n")
+        report.write(
+            f"Fiscal year min: {fiscal_year_min}\n"
+        )
+        report.write(
+            f"Fiscal year max: {fiscal_year_max}\n"
+        )
 
-        report.write("\nNULL COUNTS FOR REQUIRED COLUMNS\n")
+        report.write(
+            "\nNULL COUNTS FOR REQUIRED COLUMNS\n"
+        )
         report.write("-" * 80 + "\n")
 
         for col, count in null_counts.items():
@@ -196,11 +272,15 @@ def check_silver_output(
                 if total_rows
                 else 0
             )
+
             report.write(
-                f"{col}: {count:,} nulls ({pct:.4f}%)\n"
+                f"{col}: {count:,} "
+                f"nulls ({pct:.4f}%)\n"
             )
 
-        report.write("\nQUALITY FLAG TRUE COUNTS\n")
+        report.write(
+            "\nQUALITY FLAG TRUE COUNTS\n"
+        )
         report.write("-" * 80 + "\n")
 
         for col, count in flag_true_counts.items():
@@ -209,32 +289,83 @@ def check_silver_output(
                 if total_rows
                 else 0
             )
+
             report.write(
-                f"{col}: {count:,} true ({pct:.4f}%)\n"
+                f"{col}: {count:,} "
+                f"true ({pct:.4f}%)\n"
             )
 
-        report.write("\nVALIDATION DECISION\n")
+        report.write(
+            "\nCRITICAL FAILURES\n"
+        )
+        report.write("-" * 80 + "\n")
+
+        if critical_failures:
+            for failure in critical_failures:
+                report.write(
+                    f"- {failure}\n"
+                )
+        else:
+            report.write("None\n")
+
+        report.write(
+            "\nWARNINGS\n"
+        )
+        report.write("-" * 80 + "\n")
+
+        if warnings:
+            for warning in warnings:
+                report.write(
+                    f"- {warning}\n"
+                )
+        else:
+            report.write("None\n")
+
+        report.write(
+            "\nVALIDATION DECISION\n"
+        )
         report.write("-" * 80 + "\n")
 
         if status == "PASS":
             report.write(
-                "PASS: Silver output structure and "
-                "row identity checks passed.\n"
-            )
-        else:
-            report.write(
-                "PASS WITH WARNINGS: Review missing columns "
-                "or hash uniqueness.\n"
+                "PASS: Silver output passed "
+                "all required validation checks.\n"
             )
 
-    print(f"Done. Report saved to: {report_path}")
+        elif status == "PASS_WITH_WARNINGS":
+            report.write(
+                "PASS WITH WARNINGS: "
+                "Silver output passed critical checks, "
+                "but warnings require review.\n"
+            )
+
+        else:
+            report.write(
+                "FAIL: Silver output failed one or more "
+                "critical validation checks.\n"
+            )
+
+    print(
+        f"Done. Report saved to: {report_path}"
+    )
 
     return {
         "status": status,
         "row_count": total_rows,
-        "column_count": len(columns) if columns else 0,
-        "missing_required_columns": missing_required_columns,
-        "unique_source_hash_count": len(unique_source_hashes),
+        "column_count": (
+            len(columns)
+            if columns
+            else 0
+        ),
+        "missing_required_columns": (
+            missing_required_columns
+        ),
+        "unique_source_hash_count": (
+            unique_source_hash_count
+        ),
+        "duplicate_source_hash_count": (
+            duplicate_source_hash_count
+        ),
         "source_row_hash_uniqueness_pct": round(
             uniqueness_pct,
             4,
@@ -249,8 +380,11 @@ def check_silver_output(
             column: int(count)
             for column, count in flag_true_counts.items()
         },
+        "critical_failures": critical_failures,
+        "warnings": warnings,
         "report_file": str(report_path),
     }
+
 
 if __name__ == "__main__":
     check_silver_output()

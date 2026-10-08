@@ -1,7 +1,7 @@
 SILVER OUTPUT VALIDATION REPORT
 ================================================================================
 
-Silver file: E:\dev\vendor-payments-etl-analytics\data\processed\silver\vendor_payments_silver.csv
+Silver file: /opt/airflow/vendor_payments_batch_etl/data/processed/silver/vendor_payments_silver.candidate.csv
 Total rows checked: 3,354,965
 Column count: 49
 
@@ -12,6 +12,8 @@ All required silver columns are present.
 SOURCE ROW HASH CHECK
 --------------------------------------------------------------------------------
 Unique source_row_hash count: 3,354,965
+Duplicate source_row_hash count: 0
+Null source_row_hash count: 0
 Total rows: 3,354,965
 source_row_hash uniqueness pct: 100.0000%
 
@@ -61,6 +63,14 @@ is_large_paid_1b: 796 true (0.0237%)
 is_fiscal_year_mismatch: 1,406,987 true (41.9375%)
 is_non_profit: 241,912 true (7.2106%)
 
+CRITICAL FAILURES
+--------------------------------------------------------------------------------
+None
+
+WARNINGS
+--------------------------------------------------------------------------------
+None
+
 VALIDATION DECISION
 --------------------------------------------------------------------------------
-PASS: Silver output structure and row identity checks passed.
+PASS: Silver output passed all required validation checks.
