@@ -2,4 +2,4 @@ pandas
 pytest
 ruff==0.15.17
 psycopg2-binary
-
+python-dotenv
