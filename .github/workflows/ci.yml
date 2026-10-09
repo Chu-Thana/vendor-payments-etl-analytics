@@ -32,6 +32,8 @@ jobs:
           python -m ruff check .
 
       - name: Run sample ETL pipeline
+        env:
+          RECOVERY_DATASET_VERSION_ID: "1"
         run: |
           python scripts/pipeline/run_pipeline.py --sample
 
